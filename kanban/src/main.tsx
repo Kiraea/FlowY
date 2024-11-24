@@ -13,7 +13,7 @@ import RegisterPage from './pages/RegisterPage.tsx';
 import MainPage from './pages/MainPage.tsx';
 import CreateProjectPage from './pages/CreateProjectPage.tsx';
 import ProjectPage from './pages/ProjectPage.tsx';
-
+import ErrorContextProvider from './context/ErrorContext.tsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -43,6 +43,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router}/>
+    <ErrorContextProvider>
+      <RouterProvider router={router}/>
+    </ErrorContextProvider>
   </StrictMode>
 )
