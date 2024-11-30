@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsc && nodemon dist/index.js"
+    "dev": "nodemon --watch src --ext ts --exec \"tsc && node dist/index.js\""
   },
   "keywords": [],
   "author": "",
@@ -13,16 +13,20 @@
   "description": "",
   "dependencies": {
     "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.0",
     "argon2": "^0.41.1",
+    "connect-pg-simple": "^10.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
+    "express-session": "^1.18.1",
     "nodemon": "^3.1.7",
     "pg": "^8.13.1",
     "pg-pool": "^3.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.1",
+    "@types/pg": "^8.11.10",
     "typescript": "^5.6.3"
   }
 }

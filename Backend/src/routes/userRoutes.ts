@@ -2,18 +2,18 @@ import express from 'express';
 
 const router = express()
 import {pool} from '../index.js'
-import {userQueries} from '../queries/userQuery.js'
+import {queries} from '../queries/query.js'
 import argon2 from 'argon2';
 
 import {UserType} from '../types/types.js'
 
 
 const checkIfValid = async (username: string) : Promise<UserType> | null => {
-    let found = await pool.query(userQueries.checkIfExistQ, [username])
+    let found = await pool.query(queries.user.checkIfExistQ, [username])
     return found.rows[0] || null;
 }
 router.get('/getUsers', async (req,res)=>{
-    let result = await pool.query(userQueries.getUsersQ);
+    let result = await pool.query(queries.user.getUsersQ);
     res.json({users: result.rows});
 })
 
@@ -27,6 +27,9 @@ router.post('/login', async (req,res)=>{
     if(user){
 
         if (await argon2.verify(user.password, password)){
+            req.session.userSessionObj = {userId: user.id, userDisplayName: user.display_name}
+
+
             res.json({username: user.username})
         }else{
             res.status(401).json({error: "wrong password"})
@@ -46,7 +49,7 @@ router.post('/register', async (req,res)=>{
     let user: UserType = await checkIfValid(username)
     if (!user){
         const hashed_password =  await argon2.hash(password);
-        let result = await pool.query(userQueries.registerQ, [username, hashed_password, display_name])
+        let result = await pool.query(queries.user.registerQ, [username, hashed_password, display_name])
         if (result.rows.length > 0 ){
             newUser = result.rows[0].username;
             res.json({newUser});

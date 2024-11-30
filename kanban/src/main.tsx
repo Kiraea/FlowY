@@ -14,6 +14,8 @@ import MainPage from './pages/MainPage.tsx';
 import CreateProjectPage from './pages/CreateProjectPage.tsx';
 import ProjectPage from './pages/ProjectPage.tsx';
 import ErrorContextProvider from './context/ErrorContext.tsx';
+import AuthContextProvider from './context/AuthContext.tsx';
+import ProtectedRoute from './components/ProtectedRoute.tsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -27,24 +29,28 @@ const router = createBrowserRouter([
     path: '/register',
     element: <RegisterPage/>,
   },
+  
   {
     path: '/main',
-    element: <MainPage/>
+    element: <ProtectedRoute><MainPage/></ProtectedRoute>
   },
   {
     path: '/createProject',
-    element: <CreateProjectPage/>
+
+    element: <ProtectedRoute><CreateProjectPage/> </ProtectedRoute>
   },
   {
     path: 'project',
-    element: <ProjectPage/>
+    element: <ProtectedRoute><ProjectPage/></ProtectedRoute>
   }
 ])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorContextProvider>
-      <RouterProvider router={router}/>
+      <AuthContextProvider >
+        <RouterProvider router={router}/>
+      </AuthContextProvider>
     </ErrorContextProvider>
   </StrictMode>
 )

@@ -4,6 +4,10 @@ import Pool from 'pg-pool';
 import dotenv from 'dotenv';
 dotenv.config();
 import { router as userRoutes } from './routes/userRoutes.js';
+import connectpgsimple from 'connect-pg-simple';
+import session from 'express-session';
+import { router as projectRoutes } from './routes/projectRoutes.js';
+const pgSession = connectpgsimple(session);
 const app = express();
 var pool = new Pool({
     database: process.env.DATABASE_NAME,
@@ -28,7 +32,23 @@ app.use(cors(corsOptions));
 /// multipart/form-data
 app.use(express.json()); // multipart/form-data
 app.use(express.urlencoded({ extended: false }));
+app.use(session({
+    store: new pgSession({
+        pool: pool,
+        tableName: 'user_sessions'
+    }),
+    secret: process.env.SESSION_SECRET_KEY,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        httpOnly: true, // basically no javascript to access cookie,
+        sameSite: 'strict',
+        maxAge: 60000 * 60,
+    }
+}));
 app.use('/api', userRoutes);
+app.use('/api', projectRoutes);
 app.get('/', (req, res) => {
     res.send('Hello World');
 });
@@ -48,8 +68,27 @@ run();
 // by doign search_path to
 const setupDatabase = async () => {
     await pool.query("SET search_path TO 'kanban';");
-    //await pool.query("DROP TYPE IF EXISTS status_enum");
-    //await pool.query(`CREATE TYPE status_enum AS ENUM('pending', 'accepted', 'rejected')`);
+    /*
+      await pool.query(`DROP TABLE IF EXISTS task_members;`);
+      await pool.query(`DROP TABLE IF EXISTS project_members;`);
+      await pool.query(`DROP TABLE IF EXISTS friend_request;`);
+      await pool.query(`DROP TABLE IF EXISTS user_sessions;`);
+      await pool.query(`DROP TABLE IF EXISTS friends;`);
+      await pool.query(`DROP TABLE IF EXISTS users;`);
+      await pool.query(`DROP TABLE IF EXISTS tasks;`);
+      await pool.query(`DROP TABLE IF EXISTS projects;`);
+    
+      // Drop types (now that tables are gone)
+      await pool.query(`DROP TYPE IF EXISTS status_enum CASCADE;`);
+      await pool.query(`DROP TYPE IF EXISTS task_priority_type CASCADE;`);
+      await pool.query(`DROP TYPE IF EXISTS task_status_type CASCADE;`);
+      await pool.query(`DROP TYPE IF EXISTS role_type CASCADE;`);
+      await pool.query(`CREATE TYPE status_enum AS ENUM('pending', 'accepted', 'rejected');`);
+      await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
+      await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
+      await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
+    
+    */
     await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
@@ -59,6 +98,16 @@ const setupDatabase = async () => {
       is_disabled BOOLEAN DEFAULT FALSE   
     );`);
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS "user_sessions" (
+      "sid" varchar NOT NULL PRIMARY KEY,
+      "sess" json NOT NULL,
+      "expire" timestamp(6) NOT NULL
+      )
+      WITH (OIDS=FALSE);
+      `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "user_sessions" ("expire");`);
+    console.log("0");
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS friends (
         id SERIAL PRIMARY KEY,
         user_id_1 INTEGER,
@@ -67,9 +116,10 @@ const setupDatabase = async () => {
         REFERENCES users(id) ON DELETE CASCADE,
         CONSTRAINT fk_user2 FOREIGN KEY (user_id_2)
         REFERENCES users(id) ON DELETE CASCADE,
-        CONSTRAINT unique_friend UNIQUE (user_id_1, user_id_2)
+        UNIQUE (user_id_1, user_id_2)
         );
       `);
+    console.log("1");
     await pool.query(`
         CREATE TABLE IF NOT EXISTS friend_request (
           id SERIAL PRIMARY KEY,
@@ -82,13 +132,60 @@ const setupDatabase = async () => {
           REFERENCES users(id) ON DELETE CASCADE,
           CONSTRAINT fk_receiver FOREIGN KEY (receiver_user)
           REFERENCES users(id) ON DELETE CASCADE,
-          CONSTRAINT unique_request UNIQUE (sender_user, receiver_user)
+          UNIQUE (sender_user, receiver_user)
           );
+        `);
+    console.log("2");
+    await pool.query(`
+          CREATE TABLE IF NOT EXISTS projects (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            github_link VARCHAR(255) NULL,
+            specifications VARCHAR(255) NOT NULL,
+            created_at DATE DEFAULT CURRENT_DATE
+          );
+        `);
+    console.log("3");
+    await pool.query(`
+          CREATE TABLE IF NOT EXISTS project_members (
+            id SERIAL PRIMARY KEY,
+            project_id INTEGER NOT NULL,
+            member_id INTEGER NOT NULL,
+            role role_type,
+            CONSTRAINT fk_project_id_project_members FOREIGN KEY (project_id)
+            REFERENCES projects(id) ON DELETE CASCADE,
+            CONSTRAINT fk_member_id_project_members FOREIGN KEY (member_id)
+            REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE (project_id, member_id)
+          );     
+        `);
+    console.log("4");
+    await pool.query(`
+          CREATE TABLE IF NOT EXISTS tasks (
+            id SERIAL PRIMARY KEY,
+            task_title VARCHAR(255) NOT NULL,
+            task_priority task_priority_type NOT NULL,
+            task_status task_status_type NOT NULL,
+            created_at DATE DEFAULT CURRENT_DATE,
+            project_id INTEGER NOT NULL,
+            CONSTRAINT fk_project_id_tasks FOREIGN KEY (project_id)
+            REFERENCES projects(id) ON DELETE CASCADE
+          );
+        `);
+    console.log("5");
+    await pool.query(`
+          CREATE TABLE IF NOT EXISTS task_members (
+            id SERIAL PRIMARY KEY,
+            task_member_id INTEGER NOT NULL,
+            task_id INTEGER NOT NULL,
+            CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_member_id)
+            REFERENCES project_members(id),
+            CONSTRAINT fk_task_id_task_members FOREIGN KEY(task_id)
+            REFERENCES tasks(id),
+            UNIQUE (task_id, task_member_id)
+          ); 
         `);
 };
 export { pool };
-/*
-The constraint unique_friendship UNIQUE (user_id_1, user_id_2) ensures that no two friendships can exist between the same pair of users, regardless of the order.
-This means that if you already have a row where user_id_1 = 1 and user_id_2 = 2, you cannot insert another row with user_id_1 = 2 and user_id_2 = 1, because these represent the same friendship.
-*/ 
 //# sourceMappingURL=index.js.map

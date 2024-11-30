@@ -1,10 +1,16 @@
 
 
 type UserType = {
+    id: number,
     username: string,
     password: string,
     display_name: string,
     is_disabled: boolean,
 }
 
-export {UserType}
+type UserSessionType = {
+    id: number,
+    display_name: string, 
+}
+
+export {UserType, UserSessionType}

@@ -21,6 +21,7 @@ const queries = {
         FROM users u
         WHERE u.username = $1 and u.password = $2;
     `
+    //--------------------------------------------------------------------------------
 };
 export { queries as userQueries };
 //# sourceMappingURL=userQuery.js.map
