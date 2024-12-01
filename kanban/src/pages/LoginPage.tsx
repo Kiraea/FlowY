@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { ErrorComponent } from '../context/ErrorContext';
 import {ErrorContext} from '../context/ErrorContext';
 import { AxiosError } from 'axios';
+import { AuthContext } from '../context/AuthContext';
 type user = {
     username: string,
     password: string,
@@ -16,7 +17,7 @@ type user = {
 
 
 function LoginPage() {
-
+    const {isLoggedIn, loading, setIsLoggedIn, setLoading } = useContext(AuthContext)
 
     const {errorC, setErrorC} = useContext(ErrorContext)
 
@@ -46,6 +47,8 @@ function LoginPage() {
             })
             console.log(result.data)
             if(result.status === 200){
+                setLoading(false)
+                setIsLoggedIn(true)
                 navigate('/main');
             }
             

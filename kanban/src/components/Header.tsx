@@ -2,8 +2,18 @@ import React from 'react'
 import { RiFlowChart } from "react-icons/ri"
 import { GiCrossedAirFlows } from "react-icons/gi";
 import { FaUser } from "react-icons/fa6";
+import { AxiosInstance } from 'axios';
+import { useUserData } from '../hooks/QueryHooks';
 
 function Header() {
+  const {data, isPending, isError, error} = useUserData()
+  if (isPending){
+    return <div>Is Loading ...</div>
+  }
+  if (isError){
+    return <div>ERROR: {error.message}</div>
+  }
+
   return (
     <div className='flex justify-between items-center bg-primary-bg0 p-5 w-full'>
         <div className='flex items-center'>
@@ -12,7 +22,7 @@ function Header() {
         </div>
         <div className='flex flex-col items-center'>
             <FaUser className='size-8'/>
-            <div className='text-center'>Welcome, Kira!</div>
+            <div className='text-center'>Welcome, {data}</div>
         </div>
     </div>
   )

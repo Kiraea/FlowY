@@ -3,6 +3,7 @@ const router = express();
 import { pool } from '../index.js';
 import { queries } from '../queries/query.js';
 import argon2 from 'argon2';
+import { verifySessionToken } from '../sessionUtils.js';
 const checkIfValid = async (username) => {
     let found = await pool.query(queries.user.checkIfExistQ, [username]);
     return found.rows[0] || null;
@@ -13,13 +14,32 @@ router.get('/getUsers', async (req, res) => {
 });
 router.get('/getUser', (req, res) => {
 });
+router.get(`/getUserDisplayName`, verifySessionToken, async (req, res) => {
+    const { userId } = req;
+    if (userId === undefined) {
+        res.status(403).json({ error: "undefined session id" });
+    }
+    else {
+        try {
+            let result = await pool.query(queries.user.getDisplayName, [userId]);
+            if (result.rowCount > 0) {
+                console.log("dsad" + result.rows[0].display_name);
+                res.status(200).json({ displayName: result.rows[0].display_name });
+            }
+        }
+        catch (e) {
+            console.log(e);
+            res.status(500).json({ error: "failed due to: " + e });
+        }
+    }
+});
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     console.log(username, password);
     const user = await checkIfValid(username);
     if (user) {
         if (await argon2.verify(user.password, password)) {
-            req.session.userSessionObj = { userId: user.id, userDisplayName: user.display_name };
+            req.session.userSessionObj = { userId: user.id };
             res.json({ username: user.username });
         }
         else {
@@ -47,6 +67,18 @@ router.post('/register', async (req, res) => {
         else {
             console.log("username already exist");
         }
+    }
+});
+router.get('/verifySessionToken', verifySessionToken, async (req, res) => {
+    const { userId } = req;
+    console.log("backend verifysessiontoken" + userId);
+    if (userId) {
+        console.log("backend verifysessiontoken" + userId);
+        res.status(200).json({ result: true });
+    }
+    else {
+        console.log("backend verifysessiontoken" + userId);
+        res.status(401).json({ result: false });
     }
 });
 export { router };

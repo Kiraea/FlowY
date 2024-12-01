@@ -8,9 +8,5 @@ type UserType = {
     is_disabled: boolean,
 }
 
-type UserSessionType = {
-    id: number,
-    display_name: string, 
-}
 
-export {UserType, UserSessionType}
+export {UserType}

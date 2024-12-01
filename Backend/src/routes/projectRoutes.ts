@@ -3,12 +3,16 @@ const router = express();
 import { pool } from '../index.js';
 import pg from 'pg'
 import {queries} from '../queries/query.js'
+import {verifySessionToken} from '../sessionUtils.js'
 
 router.get('/getProjects', async (req,res)=> {
-    
     try{
         let result = await pool.query(queries.project.getProjectsQ);
-        res.status(200).json(result.rows);
+        if (result.rowCount > 0 ){
+            res.status(200).json({data: result.rows, message: "foundProjects", status:"success"});
+        }else{
+            res.status(200).json({data : null, message: "did not find projects", status:"success"});
+        }
     }catch(e){
         res.status(403).json({error: e})
     }
@@ -17,9 +21,32 @@ router.get('/getProjects', async (req,res)=> {
 router.get(`/getProjectsById`, async(req,res)=>{
     try{
         let result = await pool.query(queries.project.getProjectByIdQ);
-        res.status(200).json({result: result.rows})
+        if (result.rowCount > 0){
+            res.status(200).json({data: result.rows, message: "foundProjects", status:"success"});
+        }else{
+            res.status(200).json({data : null, message: "did not find projects", status:"success"});
+        }
     }catch(e){
-        res.json(403).json({error: e})
+        res.status(403).json({error: e})
+    }
+})
+router.get(`/getProjectsByUserId`, verifySessionToken, async(req,res)=>{
+    const {userId} = req || null
+    if(userId === null){
+        res.status(403).json({error: "did not find userId, not verified"});
+    }else{
+        try{
+            console.log(userId)
+            let result = await pool.query(queries.project.getProjectByUserIdQ, [userId])
+            if (result.rowCount > 0){
+                res.status(200).json({data: result.rows, message: "foundProjects", status:"success"});
+            }else{
+                res.status(200).json({data : null, message: "did not find projects", status:"success"});
+            }
+        }catch(e){
+            res.status(403).json({error: e});
+            console.log(e);
+        }
     }
 })
 
@@ -29,9 +56,9 @@ router.post('/getProjectMembersById', async(req,res)=>{
     try{
         let result = await pool.query(queries.project.getProjectMembers, [projectId]);
         if (result.rowCount > 0) {
-            res.status(200).json({result: result.rows})
+            res.status(200).json({data: result.rows, message: "foundProjects", status:"success"});
         }else{
-            res.status(401).json({error: "did not add"})
+            res.status(200).json({data : null, message: "did not find projects", status:"success"});
         }
     }catch(e){
         res.status(500).json({error: e})
@@ -47,13 +74,12 @@ const checkIfValidURL = (urlLink: string) => {
     }
     
 }
-router.post('/createProject', async (req,res)=> {
-    const {userId, name, description, link, specifications, members} = req.body
+router.post('/createProject', verifySessionToken, async (req,res)=> {
+    const {name, description, link, specifications, members} = req.body
+    const {userId} = req
     let hasMembers = false;
-    const githubLink = link === '' ? link : null
-
-    console.log(userId, name, description, link, specifications, members);
-    if (req.body.members != null){
+    const githubLink = link === '' ? null : link
+    if (req.body.members != null || req.body.members != undefined){
         hasMembers = true
     }
 
@@ -61,6 +87,7 @@ router.post('/createProject', async (req,res)=> {
 
         if (checkIfValidURL(githubLink) === false){
             res.status(402).json({error: "invalid github link"});
+            return;
         }
     }
 

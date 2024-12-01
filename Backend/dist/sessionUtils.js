@@ -1,14 +1,15 @@
-import express from 'express';
-const router = express();
 const verifySessionToken = (req, res, next) => {
-    const { userSessionObj } = req.session;
-    console.log(userSessionObj);
-    if (userSessionObj.userId && userSessionObj.userDisplayName != "") {
-        res.status(200).json({ status: "validRequest" });
+    const { userSessionObj } = req.session || null;
+    console.log("session utils" + userSessionObj);
+    if (userSessionObj !== null && userSessionObj.userId) {
+        req.userId = userSessionObj.userId;
+        console.log("going next");
+        return next();
     }
     else {
+        console.log("did not go next");
         res.status(401).json({ error: "UnAuthorized User" });
     }
 };
-export default router;
+export { verifySessionToken };
 //# sourceMappingURL=sessionUtils.js.map

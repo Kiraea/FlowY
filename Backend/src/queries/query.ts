@@ -26,6 +26,12 @@ const queries = {
         FROM users u
         WHERE u.username = $1 and u.password = $2;
         `,
+
+        getDisplayName:`
+            SELECT u.display_name
+            FROM users u 
+            WHERE u.id = $1;
+        `
     },
     project:{
         addProjectsQ:`
@@ -50,21 +56,17 @@ const queries = {
             SELECT pm.*
             FROM project_members pm
             WHERE pm.project_id = $1;
+        `,
+        getProjectByUserIdQ:`
+            SELECT p.*
+            FROM projects p JOIN project_members pm
+                            ON p.id = pm.project_id
+            WHERE pm.member_id = $1;
         `
-    }
-        
-
-    //--------------------------------------------------------------------------------
-
-    
-
-
-
+    },
 }
 
-const projectQueries = {
-    
-}
+
 
 
 

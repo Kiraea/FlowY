@@ -4,7 +4,15 @@ declare module 'express-session'{
     interface SessionData {
       userSessionObj?: {
         userId: number,
-        userDisplayName: string,
       };
     }
   }
+
+
+declare global {
+    namespace Express {
+        interface Request {
+            userId?: number; // Add user to the Request interface
+        }
+    }
+}
