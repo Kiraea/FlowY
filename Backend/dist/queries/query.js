@@ -26,6 +26,11 @@ const queries = {
             SELECT u.display_name
             FROM users u 
             WHERE u.id = $1;
+        `,
+        getDisplayNameAndId: `
+            SELECT u.display_name, u.id
+            FROM USERS u
+            where u.id = $1;
         `
     },
     project: {
@@ -52,10 +57,12 @@ const queries = {
             WHERE pm.project_id = $1;
         `,
         getProjectByUserIdQ: `
-            SELECT p.*
-            FROM projects p JOIN project_members pm
-                            ON p.id = pm.project_id
-            WHERE pm.member_id = $1;
+            SELECT p.id, p.name, p.description, TO_CHAR(p.created_at, 'YYYY Month DD') as created_at_formatted, p.github_link, p.specifications, 
+                COUNT(pm.member_id) as member_count
+            FROM projects p 
+            JOIN project_members pm ON p.id = pm.project_id
+            WHERE pm.member_id = $1
+            GROUP BY p.id, p.name, p.description, p.created_at, p.github_link, p.specifications;
         `
     },
 };

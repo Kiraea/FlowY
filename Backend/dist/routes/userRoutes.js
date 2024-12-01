@@ -21,10 +21,10 @@ router.get(`/getUserDisplayName`, verifySessionToken, async (req, res) => {
     }
     else {
         try {
-            let result = await pool.query(queries.user.getDisplayName, [userId]);
+            let result = await pool.query(queries.user.getDisplayNameAndId, [userId]);
             if (result.rowCount > 0) {
                 console.log("dsad" + result.rows[0].display_name);
-                res.status(200).json({ displayName: result.rows[0].display_name });
+                res.status(200).json({ displayName: result.rows[0].display_name, userId: result.rows[0].id });
             }
         }
         catch (e) {

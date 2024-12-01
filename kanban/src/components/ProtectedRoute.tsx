@@ -12,17 +12,18 @@ function ProtectedRoute({children}: ProtectedRouteProps) {
     console.log("initial isLoggedin" + isLoggedIn + "initial loading" + loading)
     useEffect(()=> {
         console.log("useEffect protectRoute")
-        if (!loading){
-            if (!isLoggedIn){
-                console.log("is not loading and is not logged in")
-                console.log("isLoggedin" + isLoggedIn + "loading" + loading)
-                navigate('/login', {replace:true})// so they cant go back  
-            }
+        if (!loading && !isLoggedIn){
+            console.log("is not loading and is not logged in")
+            console.log("isLoggedin" + isLoggedIn + "loading" + loading)
+            navigate('/login', {replace:true})// so they cant go back  
         }
     }, [navigate, isLoggedIn, loading]) // check why i need to make this depdencies for useEffect.
 
     if (loading){
         return <div>loading...</div>
+    }
+    if (!isLoggedIn){
+        return null
     }
     
     return children

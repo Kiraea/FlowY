@@ -9,8 +9,8 @@ export const useUserData = () => {
             try{
                 let result = await axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getUserDisplayName`);
                 if (result.status === 200){
-                    console.log(result.data.displayName);
-                    return result.data.displayName
+                    console.log(result.data);
+                    return result.data
                 }
             }catch(e: unknown){
                 if (e instanceof AxiosError){

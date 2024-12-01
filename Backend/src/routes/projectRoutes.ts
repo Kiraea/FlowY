@@ -31,7 +31,7 @@ router.get(`/getProjectsById`, async(req,res)=>{
     }
 })
 router.get(`/getProjectsByUserId`, verifySessionToken, async(req,res)=>{
-    const {userId} = req || null
+    const {userId} = req || null;
     if(userId === null){
         res.status(403).json({error: "did not find userId, not verified"});
     }else{
@@ -75,8 +75,12 @@ const checkIfValidURL = (urlLink: string) => {
     
 }
 router.post('/createProject', verifySessionToken, async (req,res)=> {
-    const {name, description, link, specifications, members} = req.body
+    const {name, description, link, specifications, members} = req.body.projectDetails
     const {userId} = req
+
+    console.log("hello2")
+    console.log(name, description, link, specifications, members)
+    console.log("hello")
     let hasMembers = false;
     const githubLink = link === '' ? null : link
     if (req.body.members != null || req.body.members != undefined){
@@ -86,7 +90,7 @@ router.post('/createProject', verifySessionToken, async (req,res)=> {
     if (githubLink !== null){
 
         if (checkIfValidURL(githubLink) === false){
-            res.status(402).json({error: "invalid github link"});
+            res.status(405).json({error: "invalid github link"});
             return;
         }
     }
@@ -100,7 +104,9 @@ router.post('/createProject', verifySessionToken, async (req,res)=> {
                     let res2: pg.QueryResult = await pool.query(queries.project.addProjectMembersQ, [idR, userId, 'leader'])
                     console.log("res2:", res2)
                     if (res2.rowCount > 0){
-                        res.status(200).json({result: res2.rows});
+                        res.status(200).json({data:res2.rows, message: "sucesfully added", status:"success"});
+                    }else{
+                        res.status(403).json({data: null, message: "cant create project, please try again", status:"success"})
                     }
                 }catch(e){
                     res.status(500).json({error: e});
