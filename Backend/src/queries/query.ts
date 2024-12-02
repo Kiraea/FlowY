@@ -69,8 +69,14 @@ const queries = {
             JOIN project_members pm ON p.id = pm.project_id
             WHERE pm.member_id = $1
             GROUP BY p.id, p.name, p.description, p.created_at, p.github_link, p.specifications;
+        `,
+        getProjectMemberById:`
+            SELECT pm.project_id, pm.member_id
+            FROM project_members pm
+            WHERE pm.project_id = $1 AND pm.member_id = $2;
         `
     },
+
 }
 
 

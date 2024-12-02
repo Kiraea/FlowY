@@ -6,16 +6,18 @@ type ProtectedRouteProps = PropsWithChildren
 function ProtectedRoute({children}: ProtectedRouteProps) {
     const navigate = useNavigate()
     const {isLoggedIn, loading} = useContext(AuthContext);
-
-
-    console.log("ProtectedRoutePROPS rendered")
-    console.log("initial isLoggedin" + isLoggedIn + "initial loading" + loading)
+    console.log(new Date() + "protectedRoute")
+    console.log(loading + "loading");
+    console.log(isLoggedIn + "isloggedin");
     useEffect(()=> {
-        console.log("useEffect protectRoute")
-        if (!loading && !isLoggedIn){
-            console.log("is not loading and is not logged in")
-            console.log("isLoggedin" + isLoggedIn + "loading" + loading)
-            navigate('/login', {replace:true})// so they cant go back  
+        console.log(loading)
+        if (!loading)
+        {
+            console.log(loading)
+            if(!isLoggedIn){
+                navigate('/login', {replace:true})// so they cant go back  
+
+            }
         }
     }, [navigate, isLoggedIn, loading]) // check why i need to make this depdencies for useEffect.
 

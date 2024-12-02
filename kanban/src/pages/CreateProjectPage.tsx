@@ -103,7 +103,7 @@ function CreateProjectPage() {
               <textarea value={projectLink} placeholder='https://github.com/KallavanIVCT/MOBDEVE'name='projectLink' onChange={(e)=>{setProjectLink(e.target.value)}} className='text-black focus:outline-none bg-primary-bg3 text-white p-1'/>
             </div>
             <div className='flex gap-5 self-start '>
-              <input type='text' placeholder="John#25"value={memberName} onChange={(e)=>{setMemberName(e.target.value)}} className='text-white bg-primary-bg3 p-1'/>
+              <input type='text' placeholder="JohnWick"value={memberName} onChange={(e)=>{setMemberName(e.target.value)}} className='text-white bg-primary-bg3 p-1'/>
               <button onClick={addMember} className='flex gap-2px items-center'><TiUserAdd className='text-2x'/> Add Members</button>
             </div>
             <ul className='flex flex-col'>

@@ -18,7 +18,7 @@ type errorContextProviderProps = {
 export const ErrorComponent = memo(({errorC}: {errorC: string | null}) => {
 
     return (
-        errorC !== null ? (<div className='flex items-center justify-center backdrop-blur-sm bg-primary-bg2 rounded-2xl text-white drop-shadow-xl p-5 absolute top-3 right-3'>
+        errorC !== null && errorC !== '' ? (<div className='flex items-center justify-center backdrop-blur-sm bg-primary-bg2 rounded-2xl text-white drop-shadow-xl p-5 absolute top-3 right-3'>
             <span>{errorC}</span>
         </div>) : null
     )

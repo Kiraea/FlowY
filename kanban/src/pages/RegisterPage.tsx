@@ -62,7 +62,7 @@ function RegisterPage() {
                 </div>
             </div>
             <div className='flex flex-col'>
-                <label className='text-left'>Display Name</label>
+                <label className='text-left'>Display Name <span className='text-primary-bg3'>(cannot be changed)</span></label>
                 <input type='text' name='displayname' value={user?.displayname} onChange={handleInputs} className='input-types'/>
 
             </div>

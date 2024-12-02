@@ -69,32 +69,32 @@ run();
 const setupDatabase = async () => {
     await pool.query("SET search_path TO 'kanban';");
     /*
-      await pool.query(`DROP TABLE IF EXISTS task_members;`);
-      await pool.query(`DROP TABLE IF EXISTS project_members;`);
-      await pool.query(`DROP TABLE IF EXISTS friend_request;`);
-      await pool.query(`DROP TABLE IF EXISTS user_sessions;`);
-      await pool.query(`DROP TABLE IF EXISTS friends;`);
-      await pool.query(`DROP TABLE IF EXISTS users;`);
-      await pool.query(`DROP TABLE IF EXISTS tasks;`);
-      await pool.query(`DROP TABLE IF EXISTS projects;`);
-    
-      // Drop types (now that tables are gone)
-      await pool.query(`DROP TYPE IF EXISTS status_enum CASCADE;`);
-      await pool.query(`DROP TYPE IF EXISTS task_priority_type CASCADE;`);
-      await pool.query(`DROP TYPE IF EXISTS task_status_type CASCADE;`);
-      await pool.query(`DROP TYPE IF EXISTS role_type CASCADE;`);
-      await pool.query(`CREATE TYPE status_enum AS ENUM('pending', 'accepted', 'rejected');`);
-      await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
-      await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
-      await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
+    await pool.query(`DROP TABLE IF EXISTS task_members;`);
+    await pool.query(`DROP TABLE IF EXISTS project_members;`);
+    await pool.query(`DROP TABLE IF EXISTS friend_request;`);
+    await pool.query(`DROP TABLE IF EXISTS user_sessions;`);
+    await pool.query(`DROP TABLE IF EXISTS friends;`);
+    await pool.query(`DROP TABLE IF EXISTS users;`);
+    await pool.query(`DROP TABLE IF EXISTS tasks;`);
+    await pool.query(`DROP TABLE IF EXISTS projects;`);
+  
+    // Drop types (now that tables are gone)
+    await pool.query(`DROP TYPE IF EXISTS status_enum CASCADE;`);
+    await pool.query(`DROP TYPE IF EXISTS task_priority_type CASCADE;`);
+    await pool.query(`DROP TYPE IF EXISTS task_status_type CASCADE;`);
+    await pool.query(`DROP TYPE IF EXISTS role_type CASCADE;`);
+    await pool.query(`CREATE TYPE status_enum AS ENUM('pending', 'accepted', 'rejected');`);
+    await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
+    await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
+    await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
     */
     await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       username VARCHAR(255) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
-      display_name VARCHAR(255) NOT NULL,
-      is_disabled BOOLEAN DEFAULT FALSE   
+      display_name VARCHAR(255) UNIQUE NOT NULL,
+      is_disabled BOOLEAN DEFAULT FALSE
     );`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS "user_sessions" (
@@ -106,38 +106,40 @@ const setupDatabase = async () => {
       `);
     await pool.query(`CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "user_sessions" ("expire");`);
     console.log("0");
+    /*
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS friends (
+      id SERIAL PRIMARY KEY,
+      user_id_1 INTEGER,
+      user_id_2 INTEGER,
+      CONSTRAINT fk_user1 FOREIGN KEY (user_id_1)
+      REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_user2 FOREIGN KEY (user_id_2)
+      REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE (user_id_1, user_id_2)
+      );
+    `)
+    console.log("1")
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS friends (
+      CREATE TABLE IF NOT EXISTS friend_request (
         id SERIAL PRIMARY KEY,
-        user_id_1 INTEGER,
-        user_id_2 INTEGER, 
-        CONSTRAINT fk_user1 FOREIGN KEY (user_id_1)
+        sender_user INTEGER,
+        receiver_user INTEGER,
+        status status_enum,
+        sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_sender FOREIGN KEY (sender_user)
         REFERENCES users(id) ON DELETE CASCADE,
-        CONSTRAINT fk_user2 FOREIGN KEY (user_id_2)
+        CONSTRAINT fk_receiver FOREIGN KEY (receiver_user)
         REFERENCES users(id) ON DELETE CASCADE,
-        UNIQUE (user_id_1, user_id_2)
+        UNIQUE (sender_user, receiver_user)
         );
-      `);
-    console.log("1");
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS friend_request (
-          id SERIAL PRIMARY KEY,
-          sender_user INTEGER,
-          receiver_user INTEGER,
-          status status_enum,
-          sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          CONSTRAINT fk_sender FOREIGN KEY (sender_user)
-          REFERENCES users(id) ON DELETE CASCADE,
-          CONSTRAINT fk_receiver FOREIGN KEY (receiver_user)
-          REFERENCES users(id) ON DELETE CASCADE,
-          UNIQUE (sender_user, receiver_user)
-          );
-        `);
+      `)
+    */
     console.log("2");
     await pool.query(`
           CREATE TABLE IF NOT EXISTS projects (
-            id SERIAL PRIMARY KEY,
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
             name VARCHAR(255) NOT NULL,
             description TEXT NOT NULL,
             github_link VARCHAR(255) NULL,
@@ -148,26 +150,25 @@ const setupDatabase = async () => {
     console.log("3");
     await pool.query(`
           CREATE TABLE IF NOT EXISTS project_members (
-            id SERIAL PRIMARY KEY,
-            project_id INTEGER NOT NULL,
-            member_id INTEGER NOT NULL,
+            project_id uuid NOT NULL,
+            member_id uuid NOT NULL,
             role role_type,
             CONSTRAINT fk_project_id_project_members FOREIGN KEY (project_id)
             REFERENCES projects(id) ON DELETE CASCADE,
             CONSTRAINT fk_member_id_project_members FOREIGN KEY (member_id)
             REFERENCES users(id) ON DELETE CASCADE,
-            UNIQUE (project_id, member_id)
+            PRIMARY KEY (project_id, member_id)
           );     
         `);
     console.log("4");
     await pool.query(`
           CREATE TABLE IF NOT EXISTS tasks (
-            id SERIAL PRIMARY KEY,
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
             task_title VARCHAR(255) NOT NULL,
             task_priority task_priority_type NOT NULL,
             task_status task_status_type NOT NULL,
             created_at DATE DEFAULT CURRENT_DATE,
-            project_id INTEGER NOT NULL,
+            project_id uuid NOT NULL,
             CONSTRAINT fk_project_id_tasks FOREIGN KEY (project_id)
             REFERENCES projects(id) ON DELETE CASCADE
           );
@@ -175,14 +176,13 @@ const setupDatabase = async () => {
     console.log("5");
     await pool.query(`
           CREATE TABLE IF NOT EXISTS task_members (
-            id SERIAL PRIMARY KEY,
-            task_member_id INTEGER NOT NULL,
-            task_id INTEGER NOT NULL,
-            CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_member_id)
-            REFERENCES project_members(id),
+            task_user_id uuid NOT NULL,
+            task_id uuid NOT NULL,
+            CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_user_id)
+            REFERENCES users(id),
             CONSTRAINT fk_task_id_task_members FOREIGN KEY(task_id)
             REFERENCES tasks(id),
-            UNIQUE (task_id, task_member_id)
+            PRIMARY KEY (task_id, task_user_id)
           ); 
         `);
 };

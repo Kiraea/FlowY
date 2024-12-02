@@ -96,8 +96,9 @@ run();
 // So in PostgreSQL we have the concept of DB(we put this in pool config) and then inside those DBs are schema, we create a 'kanban' schema and we select it
 // by doign search_path to
 const setupDatabase = async () => {
-    await pool.query("SET search_path TO 'kanban';")
-/*
+    await pool.query("SET search_path TO 'kanban';");
+
+  /*
   await pool.query(`DROP TABLE IF EXISTS task_members;`);
   await pool.query(`DROP TABLE IF EXISTS project_members;`);
   await pool.query(`DROP TABLE IF EXISTS friend_request;`);
@@ -116,16 +117,16 @@ const setupDatabase = async () => {
   await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
   await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
   await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
-*/
+  */
 
 
     await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       username VARCHAR(255) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
-      display_name VARCHAR(255) NOT NULL,
-      is_disabled BOOLEAN DEFAULT FALSE   
+      display_name VARCHAR(255) UNIQUE NOT NULL,
+      is_disabled BOOLEAN DEFAULT FALSE
     );`)
     
     await pool.query(`
@@ -138,9 +139,8 @@ const setupDatabase = async () => {
       `)
 
     await pool.query(`CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "user_sessions" ("expire");`)
-
-    
       console.log("0")
+      /*
     await pool.query(`
       CREATE TABLE IF NOT EXISTS friends (
         id SERIAL PRIMARY KEY,
@@ -169,12 +169,12 @@ const setupDatabase = async () => {
           UNIQUE (sender_user, receiver_user)
           );
         `)
-      
+      */
       console.log("2")
  
         await pool.query(`
           CREATE TABLE IF NOT EXISTS projects (
-            id SERIAL PRIMARY KEY,
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
             name VARCHAR(255) NOT NULL,
             description TEXT NOT NULL,
             github_link VARCHAR(255) NULL,
@@ -186,27 +186,26 @@ const setupDatabase = async () => {
       console.log("3")
         await pool.query(`
           CREATE TABLE IF NOT EXISTS project_members (
-            id SERIAL PRIMARY KEY,
-            project_id INTEGER NOT NULL,
-            member_id INTEGER NOT NULL,
+            project_id uuid NOT NULL,
+            member_id uuid NOT NULL,
             role role_type,
             CONSTRAINT fk_project_id_project_members FOREIGN KEY (project_id)
             REFERENCES projects(id) ON DELETE CASCADE,
             CONSTRAINT fk_member_id_project_members FOREIGN KEY (member_id)
             REFERENCES users(id) ON DELETE CASCADE,
-            UNIQUE (project_id, member_id)
+            PRIMARY KEY (project_id, member_id)
           );     
         `)
 
       console.log("4")
         await pool.query(`
           CREATE TABLE IF NOT EXISTS tasks (
-            id SERIAL PRIMARY KEY,
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
             task_title VARCHAR(255) NOT NULL,
             task_priority task_priority_type NOT NULL,
             task_status task_status_type NOT NULL,
             created_at DATE DEFAULT CURRENT_DATE,
-            project_id INTEGER NOT NULL,
+            project_id uuid NOT NULL,
             CONSTRAINT fk_project_id_tasks FOREIGN KEY (project_id)
             REFERENCES projects(id) ON DELETE CASCADE
           );
@@ -214,14 +213,13 @@ const setupDatabase = async () => {
       console.log("5");
         await pool.query(`
           CREATE TABLE IF NOT EXISTS task_members (
-            id SERIAL PRIMARY KEY,
-            task_member_id INTEGER NOT NULL,
-            task_id INTEGER NOT NULL,
-            CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_member_id)
-            REFERENCES project_members(id),
+            task_user_id uuid NOT NULL,
+            task_id uuid NOT NULL,
+            CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_user_id)
+            REFERENCES users(id),
             CONSTRAINT fk_task_id_task_members FOREIGN KEY(task_id)
             REFERENCES tasks(id),
-            UNIQUE (task_id, task_member_id)
+            PRIMARY KEY (task_id, task_user_id)
           ); 
         `)
 }

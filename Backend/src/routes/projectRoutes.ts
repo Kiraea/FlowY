@@ -128,5 +128,28 @@ router.post('/createProject', verifySessionToken, async (req,res)=> {
     }
 })
 
+router.post('/verifyProjectAccess', verifySessionToken, async (req,res)=> {
+    const {userId} = req
+
+    console.log('userId');
+    const {projectId} = req.body
+
+    console.log(projectId + "projectid")
+    console.log(userId+ "userId")
+    try{
+        let result = await pool.query(queries.project.getProjectMemberById, [projectId, userId]);
+        if(result.rowCount > 0){
+            res.status(200).json({data:result.rows, message: "exists", status:"success"});
+        }else{
+            console.log(result.rows + "dkwoadkawodkwao");
+            res.status(200).json({data:null, message: "cannot find member in project", status:"success"})
+        }
+    }catch(e){
+        console.log(e);
+        res.status(403).json({error: e})
+    }
+})
+
+router.post(`/`)
 
 export {router}

@@ -71,13 +71,10 @@ router.post('/register', async (req, res) => {
 });
 router.get('/verifySessionToken', verifySessionToken, async (req, res) => {
     const { userId } = req;
-    console.log("backend verifysessiontoken" + userId);
     if (userId) {
-        console.log("backend verifysessiontoken" + userId);
         res.status(200).json({ result: true });
     }
     else {
-        console.log("backend verifysessiontoken" + userId);
         res.status(401).json({ result: false });
     }
 });

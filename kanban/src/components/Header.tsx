@@ -22,7 +22,7 @@ function Header() {
         </div>
         <div className='flex flex-col items-center'>
             <FaUser className='size-8'/>
-            <div className='text-center'>Welcome {data.displayName}#{data.userId}</div>
+            <div className='text-center'>Welcome {data.displayName}</div>
         </div>
     </div>
   )
