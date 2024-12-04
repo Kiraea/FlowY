@@ -9,7 +9,10 @@ import Specifications from '../components/content/Specifications'
 import Links from '../components/content/Links'
 import People from '../components/content/People'
 import ColumnContainer from '../components/TaskFolder/ColumnContainer'
+import { TfiControlBackward } from "react-icons/tfi";
+import { Link } from 'react-router-dom'
 enum Content{
+
   Main = 'Main',
   People = 'People',
   Settings = 'Settings',
@@ -72,7 +75,10 @@ function ProjectPage() {
           <button className='left-panel-tab w-full' onClick={()=>{setContent(Content.Specifications)}}>Specifications</button>
         </div>
         <div className='flex flex-1 flex-col items-center gap-5'>
-          <h1 className='text-2xl font-bold'>Olympiad: Triangle of Software</h1>
+          <div className='flex justify-between items-center'>
+            <Link to="/main"><TfiControlBackward/></Link>
+            <h1 className='text-2xl font-bold'>Olympiad: Triangle of Software</h1>
+          </div>
 
           {content === Content.Main && <ColumnContainer/>}
           {content === Content.People && <People/>}

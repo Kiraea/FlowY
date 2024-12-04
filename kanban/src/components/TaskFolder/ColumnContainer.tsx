@@ -33,26 +33,24 @@ function ColumnContainer() {
     return <div>Cannot find project Id</div>
   }
 
-  const {isLoading: taskMembersLoading, isError: taskMembersIsError, error: taskMembersError, data: taskMembers} = useGetAllTaskMembersByProjectId(projectId);
-  console.log(taskMembers);
-
-  if (taskMembersLoading){
-    <div>is Loading...</div>
-  }
-  if (taskMembersIsError){
-    <div>{taskMembersError.message}</div>
-  }
-
-
-
   const queryClient = useQueryClient()
-  const {data: tasks, isLoading, isError , error} = useGetTasks();
+
+
+
+  const {isLoading: taskMembersLoading, isError: taskMembersIsError, error: taskMembersError, data: taskMembers = []} = useGetAllTaskMembersByProjectId(projectId);
+  console.log("column coantainer", taskMembers);
+
+
+
+
+
+  const {data: tasks, isLoading, isError , error} = useGetTasks(projectId);
 
   const {mutateAsync : updateTaskStatusQ} = useMutation({
     mutationFn : useUpdateTaskStatus,
     onSuccess: () => queryClient.invalidateQueries({queryKey: ['tasks']}) 
   }) 
-
+  console.log(taskMembers)
   async function handleDragEnd(event: DragEndEvent){
     const {active, over} = event
     if (!over) return;
@@ -65,17 +63,18 @@ function ColumnContainer() {
       console.log("error in handledragend" + e);
     }
   }
-  if (isLoading){
-    <div>Loading...</div>
+  if (isLoading || taskMembersLoading){
+    return <div>Loading...</div>
   }
-  if (isError){
-    <div>{error.message}</div>
+  if (isError || taskMembersIsError){
+    return <div>{error?.message}</div>
   }
+
   return (
     <div className='grid grid-cols-4 gap-5 w-full xl:grid-cols-2 md:grid-cols-1'>
       <DndContext onDragEnd={handleDragEnd}>
         {COLUMNS.map((obj)=>{
-          return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={tasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers}/>)
+          return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={tasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
         })}
       </DndContext>
     </div>

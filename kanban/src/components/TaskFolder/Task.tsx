@@ -26,12 +26,12 @@ type TaskType =  {
   project_id: string; // UUID of the associated project
 }
 
-type TaskMember = {
-  project_id: string,
-  task_id: string,
-  task_user_id: string,
-}
 
+type TaskMember = {
+  display_name: string,
+  id: string,
+  task_id: string,
+}
 
 
 
@@ -42,13 +42,15 @@ function Task({task, taskMembers}: TaskProps  ) {
     console.log(taskMembers); 
 
      const style =transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, } : undefined
-  return (
-    <div ref={setNodeRef} {...listeners} {...attributes} style={style} className='flex flex-col items-center justify-center relative border-primary-bg3 hover:bg-primary-bg1 hover:border-primary-bg1 transition-all duration-75'>
-        <div>{task.task_title}</div>
+    return (
+        <div ref={setNodeRef} {...listeners} {...attributes} style={style} className='h-full flex p-1 flex-col items-center justify-center relative border-primary-bg3 hover:bg-primary-bg2 hover:border-primary-bg1 transition-all duration-75'>
+        <div className='flex-grow'>{task.task_title}</div>
         <div className={`absolute top-0 left-0 ${statusColor[task.task_priority as Priority]} h-full w-2 `}></div>
-        {taskMembers && taskMembers.map((member)=> {
-            return (<div>{member.task_user_id}</div>)
-        })}
+        <ul className='flex justify-end w-full'>
+            {taskMembers && taskMembers.map((member)=> {
+                return (<li className='p-1 rounded-lg bg-primary-bg3 ' key={member.id}>{member.display_name}</li>)
+            })}
+        </ul>
     </div>
   )
 }

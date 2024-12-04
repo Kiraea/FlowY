@@ -51,12 +51,12 @@ export const useGetProjects = () => {
     })
 }
 
-export const useGetTasks = (): UseQueryResult<TaskType[] | null> => {
+export const useGetTasks = (projectId: string): UseQueryResult<TaskType[] | null> => {
     return useQuery<TaskType[] | null>({
-        queryKey: ['tasks'],
+        queryKey: ['tasks', projectId],
         queryFn: (async()=> {
             try{
-                let result = await  axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getTasks`);
+                let result = await  axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getTasksByProjectId/?projectId=${projectId}`);
                 if (result.status === 200){
                     return result.data.data 
                 }
@@ -69,7 +69,7 @@ export const useGetTasks = (): UseQueryResult<TaskType[] | null> => {
     })
 }
 
-export const useUpdateTaskStatus=  async ({taskId, newStatus}) => {
+export const useUpdateTaskStatus=  async ({taskId, newStatus} : {taskId: string, newStatus: string}) => {
     try{
         let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateTaskStatus`, {taskId: taskId, taskStatus: newStatus})
         if (result.status === 200){

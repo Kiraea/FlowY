@@ -22,14 +22,14 @@ type TaskType =  {
 }
 
 type TaskMember = {
-  project_id: string,
+  display_name: string,
+  id: string,
   task_id: string,
-  task_user_id: string,
 }
 
 
 function TaskContainer({columnId, columnTitle, tasks, taskMembers}: TaskDetailsProps) {
-
+  console.log("taskcontainer" + taskMembers)
 
 
   const {setNodeRef} = useDroppable({
@@ -38,7 +38,7 @@ function TaskContainer({columnId, columnTitle, tasks, taskMembers}: TaskDetailsP
   return (
     <div>
       <div className='font-bold'>{columnTitle}</div>
-      <div className='flex flex-col bg-primary-bg2 h-full' ref={setNodeRef}>
+      <div className='flex flex-col bg-primary-bg1 h-full' ref={setNodeRef}>
         {tasks.map((task)=>  {
           return (<Task task={task} key={task.id} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
         })}

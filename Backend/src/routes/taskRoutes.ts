@@ -37,7 +37,7 @@ router.get('/getTaskMembersByProjectId', async (req: any,res: any)=> {
             res.status(200).json({data:result.rows, message: "found task members", status:"success"});
         }else{
             console.log("dalpda2")
-            res.status(200).json({data:null, message: "no reuslts found", status:"success"})
+            res.status(200).json({data:[], message: "no results found", status:"success"})
         }
     }catch(e){
         console.log(e);
@@ -50,6 +50,8 @@ router.post(`/addTaskMemberToTaskId`, async(req,res)=> {
     try{
         let result = await pool.query(queries.tasks.addTaskMemberQ, [userId, projectId, taskId])
         if (result.rowCount > 0) {
+            console.log(result.rowCount)
+            console.log(result.rows)
             res.status(200).json({data:result.rows, message: "member added", status:"success"});
         }else{
             res.status(200).json({data:null, message: "member not added", status:"success"})
@@ -60,9 +62,10 @@ router.post(`/addTaskMemberToTaskId`, async(req,res)=> {
     }
 })
 
-router.get('/getTasks', async (req,res)=> {
+router.get('/getTasksByProjectId', async (req,res)=> {
+    const {projectId}= req.query
     try{
-        let result = await pool.query(queries.tasks.getTasksQ)
+        let result = await pool.query(queries.tasks.getTaskByProjectIdQ, [projectId])
         if (result.rowCount > 0){
             res.status(200).json({data:result.rows, message: "found Tasks", status:"success"});
         }else{

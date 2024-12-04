@@ -33,7 +33,7 @@ router.get('/getTaskMembersByProjectId', async (req, res) => {
         }
         else {
             console.log("dalpda2");
-            res.status(200).json({ data: null, message: "no reuslts found", status: "success" });
+            res.status(200).json({ data: [], message: "no results found", status: "success" });
         }
     }
     catch (e) {
@@ -46,6 +46,8 @@ router.post(`/addTaskMemberToTaskId`, async (req, res) => {
     try {
         let result = await pool.query(queries.tasks.addTaskMemberQ, [userId, projectId, taskId]);
         if (result.rowCount > 0) {
+            console.log(result.rowCount);
+            console.log(result.rows);
             res.status(200).json({ data: result.rows, message: "member added", status: "success" });
         }
         else {
@@ -57,9 +59,10 @@ router.post(`/addTaskMemberToTaskId`, async (req, res) => {
         res.status(403).json({ error: "cannot add task member due to errors" });
     }
 });
-router.get('/getTasks', async (req, res) => {
+router.get('/getTasksByProjectId', async (req, res) => {
+    const { projectId } = req.query;
     try {
-        let result = await pool.query(queries.tasks.getTasksQ);
+        let result = await pool.query(queries.tasks.getTaskByProjectIdQ, [projectId]);
         if (result.rowCount > 0) {
             res.status(200).json({ data: result.rows, message: "found Tasks", status: "success" });
         }

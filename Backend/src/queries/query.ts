@@ -81,6 +81,11 @@ const queries = {
             SELECT t.*
             FROM tasks t;
         `,
+        getTaskByProjectIdQ:`
+            SELECT t.*
+            FROM tasks t
+            WHERE t.project_id = $1;
+        `,
         addTaskQ:`
             INSERT INTO tasks (task_title, task_priority, task_status, project_id)
             VALUES
@@ -98,9 +103,9 @@ const queries = {
         `,
 
         getTaskMembersUByProjectIdQ:`
-            SELECT u.id, u.display_name
+            SELECT u.id, u.display_name, tm.task_id
             FROM task_members tm JOIN project_members pm
-                        ON tm.task_user_id = pm.member_id
+                        ON tm.task_user_id = pm.member_id AND tm.project_id = pm.project_id
                         JOIN users u ON u.id = pm.member_id
             WHERE tm.project_id = $1;
         `,
