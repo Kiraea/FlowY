@@ -25,7 +25,7 @@ strong {
 
 @layer components {
   .input-types {
-    @apply rounded-md bg-primary-bg3 focus:outline-none focus:border focus:border-primary-bg1 p-1;
+    @apply rounded-md bg-primary-bg3 focus:outline-none focus:border focus:border-primary-bg1 p-1 w-full;
   }
   .task-group-container {
     @apply flex flex-col bg-primary-bg1 text-white gap-2;

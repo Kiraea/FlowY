@@ -137,7 +137,7 @@ router.post('/verifyProjectAccess', verifySessionToken, async (req, res) => {
     console.log(projectId + "projectid");
     console.log(userId + "userId");
     try {
-        let result = await pool.query(queries.project.getProjectMemberById, [projectId, userId]);
+        let result = await pool.query(queries.project.getProjectMemberByIdQ, [projectId, userId]);
         if (result.rowCount > 0) {
             res.status(200).json({ data: result.rows, message: "exists", status: "success" });
         }

@@ -64,12 +64,45 @@ const queries = {
             WHERE pm.member_id = $1
             GROUP BY p.id, p.name, p.description, p.created_at, p.github_link, p.specifications;
         `,
-        getProjectMemberById: `
+        getProjectMemberByIdQ: `
             SELECT pm.project_id, pm.member_id
             FROM project_members pm
             WHERE pm.project_id = $1 AND pm.member_id = $2;
         `
     },
+    tasks: {
+        getTasksQ: `
+            SELECT t.*
+            FROM tasks t;
+        `,
+        addTaskQ: `
+            INSERT INTO tasks (task_title, task_priority, task_status, project_id)
+            VALUES
+            ($1, $2, $3, $4) RETURNING *;
+        `,
+        updateTaskStatusQ: `
+            UPDATE tasks
+            SET task_status = $1
+            WHERE id = $2 RETURNING *;
+        `,
+        getTaskMembersByProjectIdQ: `
+            SELECT t.*
+            FROM task_members t
+            WHERE t.project_id = $1;
+        `,
+        getTaskMembersUByProjectIdQ: `
+            SELECT u.id, u.display_name
+            FROM task_members tm JOIN project_members pm
+                        ON tm.task_user_id = pm.member_id
+                        JOIN users u ON u.id = pm.member_id
+            WHERE tm.project_id = $1;
+        `,
+        addTaskMemberQ: `
+            INSERT INTO task_members (task_user_id, project_id, task_id)
+            VALUES
+            ($1, $2, $3) RETURNING *;
+        `
+    }
 };
 export { queries };
 //# sourceMappingURL=query.js.map

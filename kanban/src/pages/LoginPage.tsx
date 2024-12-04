@@ -72,12 +72,12 @@ function LoginPage() {
         <ErrorComponent errorC={errorC}/>
         <h1 className='text-6xl font-Monsterrat'>Login</h1>
         <div className='flex bg-primary-bg1 w-1/2 flex-col p-10 rounded-md h-full gap-5'>
-            <div className='flex gap-x-12'>
-                <div className='flex flex-col w-1/2 '>
+            <div className='flex gap-x-12 sm:flex-col sm:gap-y-4'>
+                <div className='flex flex-col w-1/2 sm:w-full'>
                     <label className='text-left'>Username</label>
                     <input type='text' name="username" value={user?.username} onChange={handleChange} className='input-types'/>
                 </div>
-                <div className='flex flex-col w-1/2'>
+                <div className='flex flex-col w-1/2 sm:w-full'>
                     <label>Password</label>
                     <input type='password' name="password" value={user?.password} onChange={handleChange} className='input-types'/>
                 </div>

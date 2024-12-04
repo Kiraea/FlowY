@@ -9,6 +9,7 @@ import connectpgsimple from 'connect-pg-simple'
 import session from 'express-session'
 
 import {router as projectRoutes} from './routes/projectRoutes.js'
+import {router as taskRoutes} from './routes/taskRoutes.js';
 
 
 
@@ -41,7 +42,7 @@ var pool = new Pool({
 })
 const corsOptions = {
     origin: "http://localhost:5173",
-    methods: ['GET', 'POST', 'DELETE', 'PUT'],
+    methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH'],
     credentials: true
 }
 app.use(cors(corsOptions))
@@ -71,8 +72,9 @@ app.use(session({
 
 
 
-app.use('/api', userRoutes)
-app.use('/api', projectRoutes)
+app.use('/api', userRoutes);
+app.use('/api', taskRoutes);
+app.use('/api', projectRoutes);
 app.get('/', (req, res) => {
   res.send('Hello World')
 })
@@ -99,6 +101,7 @@ const setupDatabase = async () => {
     await pool.query("SET search_path TO 'kanban';");
 
   /*
+  await pool.query(`DROP TABLE IF EXISTS task_comments;`);
   await pool.query(`DROP TABLE IF EXISTS task_members;`);
   await pool.query(`DROP TABLE IF EXISTS project_members;`);
   await pool.query(`DROP TABLE IF EXISTS friend_request;`);
@@ -112,7 +115,7 @@ const setupDatabase = async () => {
   await pool.query(`DROP TYPE IF EXISTS status_enum CASCADE;`);
   await pool.query(`DROP TYPE IF EXISTS task_priority_type CASCADE;`);
   await pool.query(`DROP TYPE IF EXISTS task_status_type CASCADE;`); 
-  await pool.query(`DROP TYPE IF EXISTS role_type CASCADE;`); 
+  await pool.query(`DROP TYPE IF EXISTS role_type CASCADE;`);
   await pool.query(`CREATE TYPE status_enum AS ENUM('pending', 'accepted', 'rejected');`);
   await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
   await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
@@ -210,13 +213,30 @@ const setupDatabase = async () => {
             REFERENCES projects(id) ON DELETE CASCADE
           );
         `)
+
+        await pool.query(
+          `CREATE TABLE IF NOT EXISTS task_comments (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              task_id uuid,
+              project_member_id uuid, 
+              project_id uuid,
+              comment VARCHAR(255) NOT NULL,
+              created_at DATE DEFAULT CURRENT_DATE,
+              edited BOOLEAN NOT NULL,
+              CONSTRAINT fk_project_member_task_comments FOREIGN KEY (project_member_id, project_id)
+              REFERENCES project_members(member_id, project_id) ON DELETE CASCADE,
+              CONSTRAINT fk_task_id_task_comments FOREIGN KEY (task_id)
+              REFERENCES tasks(id) ON DELETE CASCADE
+          );`
+        )
       console.log("5");
         await pool.query(`
           CREATE TABLE IF NOT EXISTS task_members (
             task_user_id uuid NOT NULL,
+            project_id uuid,
             task_id uuid NOT NULL,
-            CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_user_id)
-            REFERENCES users(id),
+            CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_user_id, project_id)
+            REFERENCES project_members(member_id, project_id),
             CONSTRAINT fk_task_id_task_members FOREIGN KEY(task_id)
             REFERENCES tasks(id),
             PRIMARY KEY (task_id, task_user_id)

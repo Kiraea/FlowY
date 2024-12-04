@@ -81,10 +81,10 @@ function CreateProjectPage() {
     <div className='text-white flex bg-primary-bg0 min-h-screen items-center  flex-col gap-y-5'>
 
         <Header/>
-        <div className='w-1/2'>
-          <Link to='/main'><button className='bg-primary-highlight2 text-black rounded-3xl p-1'><MdKeyboardDoubleArrowLeft/></button></Link>
+        <div className=''>
         </div>
-        <form className='w-1/2 bg-primary-bg1 p-5 flex flex-col gap-5 rounded-xl'>
+        <form className=' bg-primary-bg1 p-5 flex flex-col gap-5 rounded-xl relative'>
+              <Link to='/main'><button className='absolute -top-10 left-0 bg-primary-highlight2 text-black rounded-3xl p-1'><MdKeyboardDoubleArrowLeft/></button></Link>
             <div className='flex flex-col'>
               <label>Project Name</label>
               <input type='text' required name='projectName' value={projectName} onChange={(e)=>{setProjectName(e.target.value)}} className='input-types p-0'/>
@@ -102,9 +102,9 @@ function CreateProjectPage() {
               <label>Project Link <span className='text-primary-bg3'> (Optional) </span></label>
               <textarea value={projectLink} placeholder='https://github.com/KallavanIVCT/MOBDEVE'name='projectLink' onChange={(e)=>{setProjectLink(e.target.value)}} className='text-black focus:outline-none bg-primary-bg3 text-white p-1'/>
             </div>
-            <div className='flex gap-5 self-start '>
+            <div className='flex gap-5'>
               <input type='text' placeholder="JohnWick"value={memberName} onChange={(e)=>{setMemberName(e.target.value)}} className='text-white bg-primary-bg3 p-1'/>
-              <button onClick={addMember} className='flex gap-2px items-center'><TiUserAdd className='text-2x'/> Add Members</button>
+              <button onClick={addMember} className='flex gap-2px items-center'><TiUserAdd className='text-5xl sm:text-3xl'/><span className='md:hidden'>Add Members</span></button>
             </div>
             <ul className='flex flex-col'>
               {memberList.map((member)=>{
