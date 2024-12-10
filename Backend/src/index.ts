@@ -7,12 +7,9 @@ import {router as userRoutes} from './routes/userRoutes.js'
 import argon2 from 'argon2';
 import connectpgsimple from 'connect-pg-simple'
 import session from 'express-session'
-
+import bodyParser from 'body-parser';
 import {router as projectRoutes} from './routes/projectRoutes.js'
 import {router as taskRoutes} from './routes/taskRoutes.js';
-
-
-
 declare module 'express-session'{
   interface sessionData {
     userSessionObj?: {
@@ -50,8 +47,10 @@ app.use(cors(corsOptions))
 // application/json
 /// application/x-www-form-urlencoded
 /// multipart/form-data
-app.use(express.json()) // multipart/form-data
-app.use(express.urlencoded({extended: false})) 
+//app.use(express.json()) // multipart/form-data
+//app.use(express.urlencoded({extended: false})) 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.use(session({
@@ -100,7 +99,7 @@ run();
 const setupDatabase = async () => {
     await pool.query("SET search_path TO 'kanban';");
 
-  /*
+    /*
   await pool.query(`DROP TABLE IF EXISTS task_comments;`);
   await pool.query(`DROP TABLE IF EXISTS task_members;`);
   await pool.query(`DROP TABLE IF EXISTS project_members;`);
@@ -120,8 +119,8 @@ const setupDatabase = async () => {
   await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
   await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
   await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
-  */
 
+*/
 
     await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -185,8 +184,8 @@ const setupDatabase = async () => {
             created_at DATE DEFAULT CURRENT_DATE
           );
         `)
+      
 
-      console.log("3")
         await pool.query(`
           CREATE TABLE IF NOT EXISTS project_members (
             project_id uuid NOT NULL,
@@ -200,7 +199,7 @@ const setupDatabase = async () => {
           );     
         `)
 
-      console.log("4")
+
         await pool.query(`
           CREATE TABLE IF NOT EXISTS tasks (
             id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -229,7 +228,8 @@ const setupDatabase = async () => {
               REFERENCES tasks(id) ON DELETE CASCADE
           );`
         )
-      console.log("5");
+          
+
         await pool.query(`
           CREATE TABLE IF NOT EXISTS task_members (
             task_user_id uuid NOT NULL,
@@ -242,5 +242,23 @@ const setupDatabase = async () => {
             PRIMARY KEY (task_id, task_user_id)
           ); 
         `)
+        console.log("6");
+        /*
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS friend_request (
+          id SERIAL PRIMARY KEY,
+          INTEGER,
+          receiver_user INTEGER,
+          status status_enum,
+          sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT fk_sender FOREIGN KEY (sender_user)
+          REFERENCES users(id) ON DELETE CASCADE,
+          CONSTRAINT fk_receiver FOREIGN KEY (receiver_user)
+          REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE (sender_user, receiver_user)
+          );
+        `)
+      */
 }
 export {pool}

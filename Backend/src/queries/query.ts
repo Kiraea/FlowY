@@ -113,6 +113,11 @@ const queries = {
             INSERT INTO task_members (task_user_id, project_id, task_id)
             VALUES
             ($1, $2, $3) RETURNING *;
+        `,
+        addTaskFullQ:`
+            INSERT INTO tasks (task_title, task_priority, task_status, project_id)
+            VALUES
+            ($1, $2, $3, $4) RETURNING *;
         `
 
     }

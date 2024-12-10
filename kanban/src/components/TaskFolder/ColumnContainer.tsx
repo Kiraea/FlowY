@@ -25,8 +25,11 @@ type TaskType =  {
   project_id: string; // UUID of the associated project
 }
 
+type ColumnContainerProps = {
+  dialogRef: React.RefObject<HTMLDialogElement>
+}
+function ColumnContainer({dialogRef}: ColumnContainerProps) {
 
-function ColumnContainer() {
   const params = useParams<{projectId: string | undefined}>();
   const {projectId} = params;
   if(!projectId){
@@ -48,7 +51,7 @@ function ColumnContainer() {
 
   const {mutateAsync : updateTaskStatusQ} = useMutation({
     mutationFn : useUpdateTaskStatus,
-    onSuccess: () => queryClient.invalidateQueries({queryKey: ['tasks']}) 
+    onSuccess: () => queryClient.invalidateQueries({queryKey: ['tasks', projectId]}) 
   }) 
   console.log(taskMembers)
   async function handleDragEnd(event: DragEndEvent){
@@ -71,12 +74,15 @@ function ColumnContainer() {
   }
 
   return (
-    <div className='grid grid-cols-4 gap-5 w-full xl:grid-cols-2 md:grid-cols-1'>
-      <DndContext onDragEnd={handleDragEnd}>
-        {COLUMNS.map((obj)=>{
-          return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={tasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
-        })}
-      </DndContext>
+    <div className='w-full'>
+      <button className='bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>{dialogRef.current?.showModal()}}><span className='text-xl font-bold'>Add Task</span></button>
+      <div className='grid grid-cols-4 gap-5 lg:grid-cols-2 md:grid-cols-1'>
+        <DndContext onDragEnd={handleDragEnd}>
+          {COLUMNS.map((obj)=>{
+            return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={tasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
+          })}
+        </DndContext>
+      </div>
     </div>
   )
 }

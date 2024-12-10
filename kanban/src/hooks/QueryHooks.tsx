@@ -83,6 +83,21 @@ export const useUpdateTaskStatus=  async ({taskId, newStatus} : {taskId: string,
 
 }
 
+export const useAddTaskFull = async (formData: FormData) => {
+    try{
+        let result = await axiosInstance.post(`${import.meta.env.VITE_BASE_URL_LINK}/addTaskFull`, formData);
+        if(result.status === 200){
+          console.log(result.data)
+        }
+    }catch(e:unknown){
+      if(e instanceof AxiosError){
+        console.log(e.response?.data.error)
+      }
+    }
+
+
+}
+
 
 export const useGetAllTaskMembersByProjectId = (projectId: string) => {
     return useQuery({

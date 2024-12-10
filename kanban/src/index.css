@@ -34,6 +34,6 @@ strong {
     @apply text-xl font-bold;
   }
   .left-panel-tab {
-    @apply bg-primary-bg1 focus:bg-primary-highlight2 focus:border-primary-highlight2 hover:bg-primary-bg3 border-b-2 border-primary-bg0;
+    @apply bg-primary-bg1 hover:bg-primary-bg3;
   }
 }

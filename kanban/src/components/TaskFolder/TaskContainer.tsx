@@ -36,14 +36,13 @@ function TaskContainer({columnId, columnTitle, tasks, taskMembers}: TaskDetailsP
     id: columnId,
   })
   return (
-    <div>
-      <div className='font-bold'>{columnTitle}</div>
+    <div className='flex flex-col gap-0'>
+      <div className='font-semibold text-xl mb-2'>{columnTitle}</div>
       <div className='flex flex-col bg-primary-bg1 h-full' ref={setNodeRef}>
         {tasks.map((task)=>  {
           return (<Task task={task} key={task.id} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
         })}
       </div>
-
     </div>
   )
 }

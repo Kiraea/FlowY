@@ -13,6 +13,7 @@ export default {
           bg1: '#1e2124',
           bg3: '#424549',
           bg0: '#131517',
+          bg05: '#121415',
         },
       },
       fontFamily: {
@@ -27,6 +28,7 @@ export default {
       'lg': {'max': '1023px'}, // => @media (max-width: 1023px) { ... }
       'md': {'max': '767px'}, // => @media (max-width: 767px) { ... }
       'sm': {'max': '639px'}, // => @media (max-width: 639px) { ... }
+      'xlreverse': {'min': '1279px'},
     },
     
   },

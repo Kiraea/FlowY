@@ -2,6 +2,7 @@ import express from 'express'
 import { verifySessionToken } from '../sessionUtils.js'
 import { pool } from '../index.js'
 import { queries } from '../queries/query.js'
+import { stat } from 'fs'
 const router = express()
 
 
@@ -74,6 +75,33 @@ router.get('/getTasksByProjectId', async (req,res)=> {
     }catch(e){
         console.log(e)
         res.status(403).json({error: "does not work"})
+    }
+})
+
+router.post('/addTaskFull', async (req,res)=> {
+
+    if (req.body.data) {
+        for (let key of Object.keys(req.body.data)) {
+            console.log(key);  // Logs the keys inside the 'data' object, like 'title', 'priority', etc.
+            console.log("dkasodksa");
+        }
+    } else {
+        console.log('No data found in request body');
+    }
+
+    const {title, priority, status, projectId} = req.body
+    console.log(title, priority, status, projectId)
+
+    try{
+        let result = await pool.query(queries.tasks.addTaskFullQ, [title, priority, status, projectId])
+        if(result.rowCount > 0) {
+            res.status(200).json({data: result.rows, message:"succesfully added", status:"success"})
+        }else{
+            res.status(200).json({data: null, message:"succesfull but did not add", status:"success"})
+        }
+    }catch(e){
+        console.log(e);
+        res.status(403).json({error: "cannot add task"})
     }
 })
 
