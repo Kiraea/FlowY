@@ -30,6 +30,7 @@ export default {
       'sm': {'max': '639px'}, // => @media (max-width: 639px) { ... }
       'xlreverse': {'min': '1279px'},
     },
+    display: ["group-hover"],
     
   },
   plugins: [],

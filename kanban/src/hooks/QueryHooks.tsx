@@ -98,6 +98,31 @@ export const useAddTaskFull = async (formData: FormData) => {
 
 }
 
+export const useDeleteTask = async (taskId: string) => {
+    try{
+        let result = await axiosInstance.delete(`${import.meta.env.VITE_BASE_URL_LINK}/deleteTask/${taskId}`)
+        if(result.status === 200){
+            result.data.data
+        }
+    }catch(e:unknown){
+      if(e instanceof AxiosError){
+        console.log(e.response?.data.error)
+      }
+    }
+}
+
+export const useUpdateTaskFull = async ({taskId, title, status, priority} : {taskId: string, title:string, status:string, priority: string }) => {
+    try{
+        let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateTask/${taskId}`, {title: title, status: status, priority: priority});
+        if(result.status === 200){
+            result.data.data
+        }
+    }catch(e:unknown){
+      if(e instanceof AxiosError){
+        console.log(e.response?.data.error)
+      }
+    }
+}
 
 export const useGetAllTaskMembersByProjectId = (projectId: string) => {
     return useQuery({

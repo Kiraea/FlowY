@@ -20,6 +20,8 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 import { useQueryClient } from '@tanstack/react-query'
 import { useMutation } from '@tanstack/react-query'
 import { useAddTaskFull } from '../hooks/QueryHooks'
+import { useUpdateTaskFull } from '../hooks/QueryHooks'
+import { selectedTaskContext } from '../context/selectedTaskContext'
 enum Content{
 
   Main = 'Main',
@@ -28,13 +30,20 @@ enum Content{
   Links = 'Links',
   Specifications = 'Specifications'
 }
-
+type dataObjectType = {
+  taskId: string,
+  title:string,
+  status: string,
+  priority: string,
+}
 function ProjectPage() {
 
+  const {selectedTaskId, setSelectedTaskId} = useContext(selectedTaskContext)
   const {errorC, setErrorC} = useContext(ErrorContext)
   const [hasAccess, setHasAccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [content, setContent] = useState<Content>(Content.Main);
+
 
   const params = useParams();
   const projectId = params.projectId;
@@ -70,6 +79,7 @@ function ProjectPage() {
     }
   }
   const dialogRef = useRef<HTMLDialogElement | null>(null)
+  const dialogRefUpdate= useRef<HTMLDialogElement | null>(null)
 
   const queryClient = useQueryClient()
 
@@ -92,10 +102,33 @@ function ProjectPage() {
       console.log(value);
     }
     addTaskMutation(data)
+  }
 
+  const {mutateAsync: updateTaskMutation} = useMutation({
+    mutationFn: useUpdateTaskFull,
+    onSuccess: () => {queryClient.invalidateQueries({queryKey: ['tasks', projectId]})}
+  })
 
+  const onTaskUpdate = async (e, taskId: string) => {
+    const data = new FormData(e.target)
+    for (const value of data.values()) {
+      console.log(value);
+    }
+    for (const value of data.keys()) {
+      console.log(value);
+    }
+    let dataObject: dataObjectType = {
+      title:"",
+      taskId:"",
+      status:"",
+      priority:"",
+    }
 
+    for(const pair of data.entries()){
+      dataObject = {...dataObject, [pair[0]]: pair[1]}
+    }
 
+    updateTaskMutation({...dataObject}) 
 
   }
 
@@ -117,15 +150,15 @@ function ProjectPage() {
             <div className='flex gap-5 justify-left'>
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3 shadow-black shadow-sm'>
                   <input type='radio' value="low"  name='priority' className='hidden peer' />
-                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-green-500 peer-checked:rounded-lg  ">Low</span>
+                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-green-500 peer-checked:rounded-lg transition-colors  ">Low</span>
                 </label>
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3'>
                   <input type='radio' value="medium" name='priority' className='hidden peer'/>
-                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-yellow-400 peer-checked:rounded-lg shadow-black shadow-sm">Medium</span>
+                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-yellow-400 peer-checked:rounded-lg shadow-black shadow-sm transition-colors ">Medium</span>
                 </label >
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1  hover:bg-primary-bg3'>
                   <input type='radio'value="high" name='priority' className='hidden peer'/>
-                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-red-400  peer-checked:rounded-lg  shadow-black shadow-sm">High</span>
+                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-red-400  peer-checked:rounded-lg  shadow-black shadow-sm transition-colors">High</span>
                 </label>
               </div>
             </div>
@@ -147,6 +180,56 @@ function ProjectPage() {
         </div>
       </dialog>
 
+
+      <dialog ref={dialogRefUpdate} className='rounded-2xl w-1/2 min-h-1/2 backdrop:bg-black/80 bg-primary-bg0 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 overflow-y-hidden'>
+        <div className='w-full h-auto flex flex-col p-10 self-center items-center text-white'>
+          <h2>{selectedTaskId}</h2>
+          <h1 className='task-group-title'>Update Task</h1>
+          <form className='w-full h-auto flex flex-col gap-5' onSubmit={(e)=>{onTaskUpdate(e,selectedTaskId)}}>
+            <div className='flex flex-col'>
+              <label>Title</label>
+              <input type='text' name='title' required className='input-types bg-primary-bg1 shadow-sm shadow-black'></input>
+            </div>
+
+            <div className='flex flex-col'> 
+            <label>Priority</label>
+            <div className='flex gap-5 justify-left'>
+                <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3 shadow-black shadow-sm'>
+                  <input type='radio' value="low"  name='priority' className='hidden peer' />
+                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-green-500 peer-checked:rounded-lg transition-colors  ">Low</span>
+                </label>
+                <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3'>
+                  <input type='radio' value="medium" name='priority' className='hidden peer'/>
+                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-yellow-400 peer-checked:rounded-lg shadow-black shadow-sm transition-colors ">Medium</span>
+                </label >
+                <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1  hover:bg-primary-bg3'>
+                  <input type='radio'value="high" name='priority' className='hidden peer'/>
+                  <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-red-400  peer-checked:rounded-lg  shadow-black shadow-sm transition-colors">High</span>
+                </label>
+              </div>
+            </div>
+
+            <div className='flex flex-col gap-2 '>
+              <label>Status</label>
+              <select name='status' className='w-1/2 text-white bg-primary-bg2 hover:bg-primary-bg2 rounded-sm shadow-black shadow-sm'>
+                <option className='' value="todo">Todo</option>
+                <option className='' value="in-progress">In-Progress</option>
+                <option className='' value="review">To Review</option>
+                <option className='' value="done">Done</option>
+              </select>
+            </div>
+            <div className='flex justify-evenly flex-grow items-end gap-5'>
+              <button type='submit' className='w-1/2  sm:p-1 bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm'>Update</button>
+              <button className='w-1/2  sm:p-1 bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={(e)=>{e.preventDefault(); dialogRef.current?.close()}}>Cancel</button>
+            </div>
+          </form>
+        </div>
+      </dialog>
+
+
+
+
+
       {hasAccess ? (
       <>
         {errorC && <ErrorComponent errorC={errorC}></ErrorComponent>}
@@ -164,7 +247,7 @@ function ProjectPage() {
             <div className='flex-1'></div>
           </div>
 
-          {content === Content.Main && <ColumnContainer dialogRef={dialogRef}/>}
+          {content === Content.Main && <ColumnContainer dialogRef={dialogRef} dialogRefUpdate={dialogRefUpdate}/>}
           {content === Content.People && <People/>}
           {content === Content.Settings && <Settings/>}
           {content === Content.Specifications && <Specifications/>}

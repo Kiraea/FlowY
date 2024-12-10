@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { DialogHTMLAttributes } from 'react'
 import Task from './Task'
 import { useDroppable } from '@dnd-kit/core';
 import { useGetAllTaskMembersByProjectId } from '../../hooks/QueryHooks';
@@ -8,6 +8,7 @@ type TaskDetailsProps = {
   columnTitle: string;
   tasks: TaskType[];
   taskMembers: TaskMember[]
+  dialogRefUpdate: React.RefObject<HTMLDialogElement>
 }
 
 
@@ -28,7 +29,7 @@ type TaskMember = {
 }
 
 
-function TaskContainer({columnId, columnTitle, tasks, taskMembers}: TaskDetailsProps) {
+function TaskContainer({columnId, columnTitle, tasks, taskMembers, dialogRefUpdate}: TaskDetailsProps) {
   console.log("taskcontainer" + taskMembers)
 
 
@@ -40,7 +41,7 @@ function TaskContainer({columnId, columnTitle, tasks, taskMembers}: TaskDetailsP
       <div className='font-semibold text-xl mb-2'>{columnTitle}</div>
       <div className='flex flex-col bg-primary-bg1 h-full' ref={setNodeRef}>
         {tasks.map((task)=>  {
-          return (<Task task={task} key={task.id} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
+          return (<Task dialogRefUpdate={dialogRefUpdate} task={task} key={task.id} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
         })}
       </div>
     </div>

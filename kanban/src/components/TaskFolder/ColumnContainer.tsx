@@ -26,9 +26,10 @@ type TaskType =  {
 }
 
 type ColumnContainerProps = {
+  dialogRefUpdate: React.RefObject<HTMLDialogElement>
   dialogRef: React.RefObject<HTMLDialogElement>
 }
-function ColumnContainer({dialogRef}: ColumnContainerProps) {
+function ColumnContainer({dialogRefUpdate, dialogRef}: ColumnContainerProps) {
 
   const params = useParams<{projectId: string | undefined}>();
   const {projectId} = params;
@@ -79,7 +80,7 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
       <div className='grid grid-cols-4 gap-5 lg:grid-cols-2 md:grid-cols-1'>
         <DndContext onDragEnd={handleDragEnd}>
           {COLUMNS.map((obj)=>{
-            return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={tasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
+            return (<TaskContainer  dialogRefUpdate={dialogRefUpdate} columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={tasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
           })}
         </DndContext>
       </div>

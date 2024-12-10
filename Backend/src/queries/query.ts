@@ -118,6 +118,15 @@ const queries = {
             INSERT INTO tasks (task_title, task_priority, task_status, project_id)
             VALUES
             ($1, $2, $3, $4) RETURNING *;
+        `,
+        deleteTaskQ:`
+            DELETE FROM tasks
+            WHERE id = $1;
+        `,
+        updateTaskQ:`
+            UPDATE tasks
+            SET task_title = $1, task_status = $2, task_priority = $3
+            WHERE id = $4;
         `
 
     }

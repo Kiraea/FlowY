@@ -101,6 +101,39 @@ router.post('/addTaskFull', async (req, res) => {
         res.status(403).json({ error: "cannot add task" });
     }
 });
+router.delete(`/deleteTask/:taskId`, async (req, res) => {
+    const { taskId } = req.params;
+    try {
+        let result = await pool.query(queries.tasks.deleteTaskQ, [taskId]);
+        if (result.rowCount > 0) {
+            res.status(200).json({ data: result.rows, message: "succesfully deleted", status: "success" });
+        }
+        else {
+            res.status(200).json({ data: null, message: "did not delete but query was succesful", status: "success" });
+        }
+    }
+    catch (e) {
+        console.log(e);
+        res.status(403).json({ error: "does not work" });
+    }
+});
+router.patch(`/updateTask/:taskId`, async (req, res) => {
+    const { taskId } = req.params;
+    const { title, status, priority } = req.body;
+    try {
+        let result = await pool.query(queries.tasks.updateTaskQ, [title, status, priority, taskId]);
+        if (result.rowCount > 0) {
+            res.status(200).json({ data: result.rows, message: "succesfully updated", status: "success" });
+        }
+        else {
+            res.status(200).json({ data: null, message: "did not update but query was succesful", status: "success" });
+        }
+    }
+    catch (e) {
+        console.log(e);
+        res.status(403).json({ error: "does not work" });
+    }
+});
 router.patch(`/updateTaskStatus`, async (req, res) => {
     const { taskId, taskStatus } = req.body;
     try {
