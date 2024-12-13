@@ -1,8 +1,10 @@
 import React from 'react'
-
+import PeopleContainer from '../PeopleFolder/peopleContainer'
 function People() {
   return (
-    <div>People</div>
+    <div className=''>
+      <PeopleContainer/>
+    </div>
   )
 }
 

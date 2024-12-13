@@ -1,23 +1,38 @@
-import { useState, createContext, useEffect } from "react";
+import { useState, createContext, useEffect, RefObject } from "react";
 import { ReactNode } from "react";
-
+import { useRef } from "react";
 type SelectedTaskType = {
     selectedTaskId: string,
-    setSelectedTaskId: React.Dispatch<React.SetStateAction<string>>
+    setSelectedTaskId: React.Dispatch<React.SetStateAction<string>>,
+    openModal: () => void,
+    closeModal: () => void,
+    dialogRefUpdate: RefObject<HTMLDialogElement>|null
 }
 
 
 export const selectedTaskContext = createContext<SelectedTaskType>({
     selectedTaskId: "",
-    setSelectedTaskId: () => {}
+    setSelectedTaskId: () => {},
+    openModal: () => {},
+    closeModal: () => {},
+    dialogRefUpdate: null,
 })
 
 
 type selectedTaskContextProviderProps = {
     children: ReactNode;
 }
-function selectedTaskContextProvider ({children} :selectedTaskContextProviderProps){
+export function SelectedTaskContextProvider ({children} :selectedTaskContextProviderProps){
     const [selectedTaskId, setSelectedTaskId] = useState("")
+    const dialogRefUpdate = useRef<HTMLDialogElement>(null)
+    const openModal = () => {
+        dialogRefUpdate.current?.showModal()
+        console.log("dsadas");
+    }
+    const closeModal = () => {
+        dialogRefUpdate.current?.close()
+        console.log("dsadas");
+    }
 
 
     useEffect(()=>{
@@ -27,7 +42,7 @@ function selectedTaskContextProvider ({children} :selectedTaskContextProviderPro
     }, [selectedTaskId])
 
     return (
-        <selectedTaskContext.Provider value={{selectedTaskId: selectedTaskId, setSelectedTaskId: setSelectedTaskId}}>
+        <selectedTaskContext.Provider value={{selectedTaskId, setSelectedTaskId, openModal, closeModal, dialogRefUpdate}}>
             {children}
         </selectedTaskContext.Provider>
     )

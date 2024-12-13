@@ -22,6 +22,8 @@ import { useMutation } from '@tanstack/react-query'
 import { useAddTaskFull } from '../hooks/QueryHooks'
 import { useUpdateTaskFull } from '../hooks/QueryHooks'
 import { selectedTaskContext } from '../context/selectedTaskContext'
+
+
 enum Content{
 
   Main = 'Main',
@@ -38,7 +40,6 @@ type dataObjectType = {
 }
 function ProjectPage() {
 
-  const {selectedTaskId, setSelectedTaskId} = useContext(selectedTaskContext)
   const {errorC, setErrorC} = useContext(ErrorContext)
   const [hasAccess, setHasAccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -48,6 +49,10 @@ function ProjectPage() {
   const params = useParams();
   const projectId = params.projectId;
   console.log(projectId + "PPPPPPPPPPPPPPPPP");
+
+  const {selectedTaskId, setSelectedTaskId, openModal, closeModal, dialogRefUpdate} = useContext(selectedTaskContext)
+
+
   useEffect(()=> {
     const getQuery = async () => {
       try{
@@ -79,7 +84,6 @@ function ProjectPage() {
     }
   }
   const dialogRef = useRef<HTMLDialogElement | null>(null)
-  const dialogRefUpdate= useRef<HTMLDialogElement | null>(null)
 
   const queryClient = useQueryClient()
 
@@ -93,7 +97,6 @@ function ProjectPage() {
   const submitTodo = async (e)=> {
     e.preventDefault()
     const data = new FormData(e.target)
-
     projectId ? data.append("projectId", projectId) : null
     for (const value of data.values()) {
       console.log(value);
@@ -108,8 +111,9 @@ function ProjectPage() {
     mutationFn: useUpdateTaskFull,
     onSuccess: () => {queryClient.invalidateQueries({queryKey: ['tasks', projectId]})}
   })
-
-  const onTaskUpdate = async (e, taskId: string) => {
+  const onTaskUpdate = async (e) => {
+    e.preventDefault()
+    const taskId = selectedTaskId
     const data = new FormData(e.target)
     for (const value of data.values()) {
       console.log(value);
@@ -119,22 +123,21 @@ function ProjectPage() {
     }
     let dataObject: dataObjectType = {
       title:"",
-      taskId:"",
+      taskId:taskId,
       status:"",
       priority:"",
     }
-
     for(const pair of data.entries()){
       dataObject = {...dataObject, [pair[0]]: pair[1]}
+      // or dataObject[key] = value
     }
-
-    updateTaskMutation({...dataObject}) 
-
+    updateTaskMutation({...dataObject})
+    closeModal();
   }
 
 // the reason why line 86 is label wrapper is cause generic div hindi siya nest
   return (
-    <div className='text-white flex bg-primary-bg0 min-h-screen gap-5 xl:text-sm xl:flex-col xl:p-5'>
+    <div className='text-white flex bg-primary-bg0 min-h-screen gap-5 xl:text-sm xl:flex-col xl:p-5 box-border'>
       
       <dialog ref={dialogRef} className='rounded-2xl w-1/2 min-h-1/2 backdrop:bg-black/80 bg-primary-bg0 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 overflow-y-hidden'>
         <div className='w-full h-auto flex flex-col p-10 self-center items-center text-white'>
@@ -185,7 +188,7 @@ function ProjectPage() {
         <div className='w-full h-auto flex flex-col p-10 self-center items-center text-white'>
           <h2>{selectedTaskId}</h2>
           <h1 className='task-group-title'>Update Task</h1>
-          <form className='w-full h-auto flex flex-col gap-5' onSubmit={(e)=>{onTaskUpdate(e,selectedTaskId)}}>
+          <form className='w-full h-auto flex flex-col gap-5' onSubmit={(e)=>{onTaskUpdate(e)}}>
             <div className='flex flex-col'>
               <label>Title</label>
               <input type='text' name='title' required className='input-types bg-primary-bg1 shadow-sm shadow-black'></input>
@@ -195,7 +198,7 @@ function ProjectPage() {
             <label>Priority</label>
             <div className='flex gap-5 justify-left'>
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3 shadow-black shadow-sm'>
-                  <input type='radio' value="low"  name='priority' className='hidden peer' />
+                  <input type='radio' defaultChecked value="low"  name='priority' className='hidden peer' />
                   <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-green-500 peer-checked:rounded-lg transition-colors  ">Low</span>
                 </label>
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3'>
@@ -220,7 +223,7 @@ function ProjectPage() {
             </div>
             <div className='flex justify-evenly flex-grow items-end gap-5'>
               <button type='submit' className='w-1/2  sm:p-1 bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm'>Update</button>
-              <button className='w-1/2  sm:p-1 bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={(e)=>{e.preventDefault(); dialogRef.current?.close()}}>Cancel</button>
+              <button className='w-1/2  sm:p-1 bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>closeModal()}>Cancel</button>
             </div>
           </form>
         </div>
@@ -228,33 +231,31 @@ function ProjectPage() {
 
 
 
-
-
       {hasAccess ? (
       <>
         {errorC && <ErrorComponent errorC={errorC}></ErrorComponent>}
-        <div className='font-Monsterrat flex flex-col min-h-screen bg-primary-bg1 justify-between xl:flex-row sm:flex-wrap xl:w-full xl:min-h-0 xl:justify-around sm:text-xs sm:'>
+        <div className='font-Monsterrat flex flex-col max-h-screen bg-primary-bg1 justify-between xl:flex-row sm:flex-wrap xl:w-full xl:min-h-0 xl:justify-around sm:text-xs sm:'>
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Main)}}><GrProjects/><span className='xlreverse:hidden font-bold'>Project</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto bg-primary-bg2 sm:w-1/3' onClick={()=>{setContent(Content.People)}}><IoPeopleSharp/><span className='xlreverse:hidden font-bold'>Members</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Settings)}}><IoSettingsSharp/><span className='xlreverse:hidden font-bold'>Settings</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto bg-primary-bg2 sm:w-1/3' onClick={()=>{setContent(Content.Links)}}><FaExternalLinkSquareAlt/><span className='xlreverse:hidden font-bold'>Links</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Specifications)}}><IoDocumentTextSharp/><span className='xlreverse:hidden font-bold'>Specification</span></button>
         </div>
-        <div className='flex flex-1 flex-col items-center gap-5'>
-           <div className='flex items-center w-full mt-2'>
+        <div className='flex flex-1 flex-col xl:items-center gap-5 '>
+          <div className='flex w-3/4 mt-2'>
             <Link to="/main" className='flex-1'><IoMdArrowRoundBack className='text-xl relative -left-9 rounded-full text-white mx-10'/></Link>
             <h1 className=' flex-1 text-2xl text-center place-self-center bg-primary-bg1 text-white rounded-3xl font-extralight shadow-black shadow-sm font-extralight '>Home Problems</h1>
             <div className='flex-1'></div>
           </div>
 
-          {content === Content.Main && <ColumnContainer dialogRef={dialogRef} dialogRefUpdate={dialogRefUpdate}/>}
+          {content === Content.Main && <ColumnContainer dialogRef={dialogRef}/>}
           {content === Content.People && <People/>}
           {content === Content.Settings && <Settings/>}
           {content === Content.Specifications && <Specifications/>}
           {content === Content.Links && <Links/>}
         </div>
 
-        <LeftPanelNavigation/>
+
       </>) : <div>You are not part of a project</div>}
   </div>
   )

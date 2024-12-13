@@ -1,10 +1,14 @@
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import TaskContainer from './TaskContainer'
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { useGetTasks, useUpdateTaskStatus} from '../../hooks/QueryHooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { useGetAllTaskMembersByProjectId } from '../../hooks/QueryHooks';
+import LeftPanelNavigation from '../LeftPanelNavigation';
+import { TaskType } from '../../Types/Types';
+import { Sort } from '../../Types/Types';
+import { useSortHook } from '../../hooks/SortHooks';
 type Column = {
   id: string,
   title: string,
@@ -16,20 +20,16 @@ const COLUMNS: Column[] = [
   {id: 'review', title: 'Review'},
   {id: 'done', title: 'Done'},
 ]
-type TaskType =  {
-  id: string; // UUID format
-  task_title: string; // Corresponds to "task_title"
-  task_priority: string; // Corresponds to "task_priority_type", replace `string` with an enum if needed
-  task_status: string; // Corresponds to "task_status_type", replace `string` with an enum if needed
-  created_at?: Date; // "created_at" is optional because of the DEFAULT value
-  project_id: string; // UUID of the associated project
-}
+
 
 type ColumnContainerProps = {
-  dialogRefUpdate: React.RefObject<HTMLDialogElement>
+
   dialogRef: React.RefObject<HTMLDialogElement>
 }
-function ColumnContainer({dialogRefUpdate, dialogRef}: ColumnContainerProps) {
+function ColumnContainer({dialogRef}: ColumnContainerProps) {
+
+
+  const [sort, setSort] = useState<Sort>(Sort.Title)
 
   const params = useParams<{projectId: string | undefined}>();
   const {projectId} = params;
@@ -42,29 +42,34 @@ function ColumnContainer({dialogRefUpdate, dialogRef}: ColumnContainerProps) {
 
 
   const {isLoading: taskMembersLoading, isError: taskMembersIsError, error: taskMembersError, data: taskMembers = []} = useGetAllTaskMembersByProjectId(projectId);
-  console.log("column coantainer", taskMembers);
-
-
+  //console.log("column coantainer", taskMembers);
 
 
 
   const {data: tasks, isLoading, isError , error} = useGetTasks(projectId);
+  let pendingTask: TaskType[] = tasks ? tasks.filter((task)=>{ return (task.task_update === 'pending')}): []
 
+  
+  let sortedTask: TaskType[]= useSortHook(sort, tasks || []);
+
+  useEffect(() => {
+    console.log('Sorted tasks have changed:', sortedTask);
+  }, [sortedTask]);  // This effect will run every time sortedTasks change
   const {mutateAsync : updateTaskStatusQ} = useMutation({
     mutationFn : useUpdateTaskStatus,
     onSuccess: () => queryClient.invalidateQueries({queryKey: ['tasks', projectId]}) 
   }) 
-  console.log(taskMembers)
+  //console.log(taskMembers)
   async function handleDragEnd(event: DragEndEvent){
     const {active, over} = event
     if (!over) return;
-    console.log("happened");
+    //console.log("happened");
     const taskId = active.id as string;
     const newStatus = over.id as TaskType['task_status']
     try{
       await updateTaskStatusQ({taskId, newStatus})
     }catch(e){
-      console.log("error in handledragend" + e);
+      //console.log("error in handledragend" + e);
     }
   }
   if (isLoading || taskMembersLoading){
@@ -74,16 +79,39 @@ function ColumnContainer({dialogRefUpdate, dialogRef}: ColumnContainerProps) {
     return <div>{error?.message}</div>
   }
 
+
+
+
+
   return (
-    <div className='w-full'>
-      <button className='bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>{dialogRef.current?.showModal()}}><span className='text-xl font-bold'>Add Task</span></button>
-      <div className='grid grid-cols-4 gap-5 lg:grid-cols-2 md:grid-cols-1'>
-        <DndContext onDragEnd={handleDragEnd}>
-          {COLUMNS.map((obj)=>{
-            return (<TaskContainer  dialogRefUpdate={dialogRefUpdate} columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={tasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
-          })}
-        </DndContext>
+    <div className='w-full flex xl:flex-col gap-5 max-h-screen'>
+      <div className='flex-1'>
+        <div className='flex items-center'>
+
+          <div className='flex-1'>
+            <button className=' bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>{dialogRef.current?.showModal()}}><span className='text-xl font-bold'>Add Task</span></button>
+          </div>
+          
+          <div className='ml-auto '>
+            <select onChange={(e)=> {setSort(e.target.value as Sort)}} className=' bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm'>
+              <option value={Sort.Priority}>Priority</option>
+              <option value={Sort.Title}>Title</option>
+            </select>
+          </div>
+
+        </div>
+        <div className='grid grid-cols-4 gap-5 lg:grid-cols-2 md:grid-cols-1'>
+          <DndContext onDragEnd={handleDragEnd}>
+            {COLUMNS.map((obj)=>{
+              return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={sortedTask?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
+            })}
+          </DndContext>
+        </div>
       </div>
+
+
+
+      {tasks && <LeftPanelNavigation tasks={pendingTask} taskMembers={taskMembers.length > 0 ? taskMembers : []} />}
     </div>
   )
 }

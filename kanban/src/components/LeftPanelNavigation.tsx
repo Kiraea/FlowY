@@ -1,12 +1,46 @@
 import React from 'react'
+import { TaskType } from './TaskFolder/ColumnContainer'
+import Task from './TaskFolder/Task'
+import { TaskStyle } from '../Types/Types'
 
-function LeftPanelNavigation() {
+type LeftPanelNavigationProps = {
+  tasks: TaskType[]
+  taskMemebrs: TaskMember[]
+}
+
+type TaskMember = {
+  display_name: string,
+  id: string,
+  task_id: string,
+}
+
+
+function LeftPanelNavigation({tasks, taskMembers}: LeftPanelNavigationProps) {
   return (
-    <div className='flex min-h-screen flex-col items-center p-1 py-5 gap-5 bg-primary-bg1 border-primary-bg0 border-l-2 w-1/5 xl:w-full xl:min-h-0 '>
-      <div className='w-5/6 h-5/6 bg-primary-bg0'></div>
-      <div className='flex flex-row justify-end w-5/6'>
-        <button className='bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm'>Send</button>
+    <div className='flex flex-col  gap-10 w-1/6 items-center bg-primary-bg1 border-primary-bg0 border-l-2 xl:flex-row xl:w-full '>
+      <div className='w-full'>
+        <div className='bg-primary-bg1 border-white border-2 text-center'>My Tasks</div>
+        <div className='flex flex-col flex-1 bg-primary-bg1 overflow-y-scroll '>
+          <div className='flex-col'>
+            {tasks.map((task)=>  {
+              return (<Task task={task} key={task.id} taskStyle={TaskStyle.KanbanStyle} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
+            })}
+            </div>
+        </div>
       </div>
+      <div className='bg-blue-100'></div>
+
+      <div className='w-full'>
+        <div className='bg-primary-bg1  text-center border-white border-2'>Unapproved Tasks</div>
+        <div className='flex flex-col flex-1  overflow-y-scroll'>
+          <div className='flex-col'>
+            {tasks.map((task)=>  {
+              return (<Task task={task} key={task.id} taskStyle={TaskStyle.PendingStyle} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
+            })}
+            </div>
+        </div>
+      </div>
+
     </div>
   )
 }

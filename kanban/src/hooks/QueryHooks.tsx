@@ -3,14 +3,7 @@ import { axiosInstance } from '../axios/axios'
 import axios, { Axios, AxiosError } from 'axios';
 import { UseQueryResult } from '@tanstack/react-query';
 
-type TaskType =  {
-  id: string; // UUID format
-  task_title: string; // Corresponds to "task_title"
-  task_priority: string; // Corresponds to "task_priority_type", replace `string` with an enum if needed
-  task_status: string; // Corresponds to "task_status_type", replace `string` with an enum if needed
-  created_at?: Date; // "created_at" is optional because of the DEFAULT value
-  project_id: string; // UUID of the associated project
-}
+import { TaskType } from '../Types/Types';
 
 
 export const useUserData = () => {
@@ -112,6 +105,7 @@ export const useDeleteTask = async (taskId: string) => {
 }
 
 export const useUpdateTaskFull = async ({taskId, title, status, priority} : {taskId: string, title:string, status:string, priority: string }) => {
+    console.log("dsadsadsdsa" + taskId);
     try{
         let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateTask/${taskId}`, {title: title, status: status, priority: priority});
         if(result.status === 200){
@@ -123,6 +117,20 @@ export const useUpdateTaskFull = async ({taskId, title, status, priority} : {tas
       }
     }
 }
+
+export const useUpdateTaskUpdate = async ({taskId, task_update}: {taskId: string, task_update: string}) => {
+    try{
+        let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateTaskUpdate/${taskId}`, {task_update: task_update})
+        if(result.status === 200){
+            result.data.data
+        }
+    }catch(e:unknown){
+        if(e instanceof AxiosError){
+            console.log(e.response?.data.error)
+        }
+    }       
+}
+
 
 export const useGetAllTaskMembersByProjectId = (projectId: string) => {
     return useQuery({

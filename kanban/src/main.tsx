@@ -21,6 +21,8 @@ import ProjectPage from './pages/ProjectPage.tsx';
 import ErrorContextProvider from './context/ErrorContext.tsx';
 import AuthContextProvider from './context/AuthContext.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
+import { SelectedTaskContextProvider } from './context/selectedTaskContext.tsx';
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -54,9 +56,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorContextProvider>
       <AuthContextProvider >
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router}/>
-        </QueryClientProvider>
+        <SelectedTaskContextProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router}/>
+          </QueryClientProvider>
+        </SelectedTaskContextProvider>
       </AuthContextProvider>
     </ErrorContextProvider>
   </StrictMode>

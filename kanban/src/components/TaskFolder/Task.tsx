@@ -11,12 +11,18 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import {useContext } from 'react'
 import { selectedTaskContext } from '../../context/selectedTaskContext';
+import { TaskType, TaskStyle } from '../../Types/Types';
 
+import { IoIosCheckmark } from "react-icons/io";
+import { IoClose } from "react-icons/io5";
 type TaskProps= {
     task: TaskType
     taskMembers: TaskMember[],
-    dialogRefUpdate: React.RefObject<HTMLDialogElement>
+    taskStyle: TaskStyle
+    
 }
+
+
 enum Priority {
     high = 'high',
     medium = 'medium',
@@ -27,27 +33,20 @@ const statusColor = {
     medium: 'bg-yellow-500',
     high: 'bg-red-500'
 }
-type TaskType =  {
-  id: string; // UUID format
-  task_title: string; // Corresponds to "task_title"
-  task_priority: string; // Corresponds to "task_priority_type", replace `string` with an enum if needed
-  task_status: string; // Corresponds to "task_status_type", replace `string` with an enum if needed
-  created_at?: Date; // "created_at" is optional because of the DEFAULT value
-  project_id: string; // UUID of the associated project
-}
+
 
 
 type TaskMember = {
   display_name: string,
   id: string,
   task_id: string,
-}
+} 
 
 
 
-function Task({task, taskMembers, dialogRefUpdate}: TaskProps  ) {
+function Task({task, taskMembers, taskStyle}: TaskProps  ) {
 
-  const {setSelectedTaskId, selectedTaskId} = useContext(selectedTaskContext)
+  const {setSelectedTaskId, selectedTaskId, openModal} = useContext(selectedTaskContext)
 
   const params = useParams();
   const projectId = params.projectId;
@@ -86,8 +85,13 @@ function Task({task, taskMembers, dialogRefUpdate}: TaskProps  ) {
         </ul>
     </div>
     <div className={`absolute top-0 left-0 ${statusColor[task.task_priority as Priority]} h-full w-1 group-hover:w-8 flex flex-col items-center justify-evenly group-hover:opacity-100 transition-all`}>
-      <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=>{setSelectedTaskId("999"); console.log("selected" +selectedTaskId); dialogRefUpdate.current?.showModal()}}><IoIosSettings/></button>
-      <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=>{e.stopPropagation(); onTaskDelete(e, task.id)}}><RiDeleteBin6Fill/></button>
+
+      {taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=>{console.log("dsaldsa"); setSelectedTaskId(task.id); openModal()}}><IoIosSettings/></button>}
+      {taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=>{e.stopPropagation(); onTaskDelete(e, task.id)}}><RiDeleteBin6Fill/></button>}
+
+      {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=> {}}><IoIosCheckmark className=''/></button>}
+      {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=> {}}><IoClose className=' '/></button>}     
+
     </div>
   </div>
   )
