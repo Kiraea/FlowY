@@ -1,4 +1,5 @@
 import express from 'express';
+import { verifySessionToken } from '../sessionUtils.js';
 import { pool } from '../index.js';
 import { queries } from '../queries/query.js';
 const router = express();
@@ -61,12 +62,20 @@ router.post(`/addTaskMemberToTaskId`, async (req, res) => {
         res.status(403).json({ error: "cannot add task member due to errors" });
     }
 });
-router.get('/getTasksByProjectId', async (req, res) => {
+router.get('/getTasksAndMyTasksByProjectId/', verifySessionToken, async (req, res) => {
+    const { userId } = req;
     const { projectId } = req.query;
     try {
         let result = await pool.query(queries.tasks.getTaskByProjectIdQ, [projectId]);
         if (result.rowCount > 0) {
-            res.status(200).json({ data: result.rows, message: "found Tasks", status: "success" });
+            let resultMyTasks = await pool.query(queries.tasks.getUserTask, [projectId, userId]);
+            if (result.rowCount > 0) {
+                console.log("found some of user tasks");
+            }
+            else {
+                console.log("no tasks found");
+            }
+            res.status(200).json({ data: result.rows, data2: resultMyTasks.rows, message: "found Tasks", status: "success" });
         }
         else {
             res.status(200).json({ data: null, message: "no Tasks present", status: "success" });

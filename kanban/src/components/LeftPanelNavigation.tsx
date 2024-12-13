@@ -1,7 +1,6 @@
 import React from 'react'
-import { TaskType } from './TaskFolder/ColumnContainer'
 import Task from './TaskFolder/Task'
-import { TaskStyle } from '../Types/Types'
+import { TaskStyle, TaskType } from '../Types/Types'
 
 type LeftPanelNavigationProps = {
   pendingTasks: TaskType[],
@@ -23,7 +22,7 @@ function LeftPanelNavigation({pendingTasks,  myTasks,  taskMembers}: LeftPanelNa
         <div className='bg-primary-bg1 border-white border-2 text-center'>My Tasks</div>
         <div className='flex flex-col flex-1 bg-primary-bg1 overflow-y-scroll '>
           <div className='flex-col'>
-            {myTasks.map((task)=>  {
+            {myTasks && myTasks.map((task)=>  {
               return (<Task task={task} key={task.id} taskStyle={TaskStyle.KanbanStyle} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
             })}
             </div>

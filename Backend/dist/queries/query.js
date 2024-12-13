@@ -126,6 +126,12 @@ const queries = {
             SET task_update = $1
             WHERE id = $2 RETURNING *;
         `,
+        getUserTask: `
+            SELECT t.*
+            FROM tasks t JOIN task_members tm
+                        ON t.id = tm.task_id
+            WHERE t.project_id = $1 AND tm.task_user_id = $2
+        `
     }
 };
 export { queries };

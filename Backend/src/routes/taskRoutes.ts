@@ -63,12 +63,22 @@ router.post(`/addTaskMemberToTaskId`, async(req,res)=> {
     }
 })
 
-router.get('/getTasksByProjectId', async (req,res)=> {
+router.get('/getTasksAndMyTasksByProjectId/', verifySessionToken, async (req,res)=> {
+
+    const {userId} = req
     const {projectId}= req.query
     try{
         let result = await pool.query(queries.tasks.getTaskByProjectIdQ, [projectId])
         if (result.rowCount > 0){
-            res.status(200).json({data:result.rows, message: "found Tasks", status:"success"});
+
+            let resultMyTasks = await pool.query(queries.tasks.getUserTask, [projectId, userId])
+            if (result.rowCount > 0) {
+                console.log("found some of user tasks");
+            }else{
+                console.log("no tasks found")
+            }
+
+            res.status(200).json({data:result.rows, data2: resultMyTasks.rows, message: "found Tasks", status:"success"});
         }else{
             res.status(200).json({data:null, message: "no Tasks present", status:"success"})
         }

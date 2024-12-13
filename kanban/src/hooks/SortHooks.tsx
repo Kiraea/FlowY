@@ -11,7 +11,7 @@ type PriorityType = {
 }
 export const useSortHook = (sort: Sort, tasks: TaskType[]) => {
     if(sort === Sort.Priority){
-        return tasks.sort((taskA,taskB)=> {
+        return tasks.concat().sort((taskA,taskB)=> {
             return PriorityNumber[taskA.task_priority as keyof typeof PriorityNumber] < PriorityNumber[taskB.task_priority as keyof typeof PriorityNumber] ? 1 : -1
         })
     }

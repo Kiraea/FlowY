@@ -1,7 +1,7 @@
 import {useState, useEffect} from 'react'
 import TaskContainer from './TaskContainer'
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
-import { useGetTasks, useUpdateTaskStatus} from '../../hooks/QueryHooks';
+import { useGetTasks, useGetUserId, useUpdateTaskStatus} from '../../hooks/QueryHooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { useGetAllTaskMembersByProjectId } from '../../hooks/QueryHooks';
@@ -44,14 +44,19 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
   const {isLoading: taskMembersLoading, isError: taskMembersIsError, error: taskMembersError, data: taskMembers = []} = useGetAllTaskMembersByProjectId(projectId);
   //console.log("column coantainer", taskMembers);
 
-
+  const userId =  useGetUserId() // async axios btw
 
   const {data: tasks, isLoading, isError , error} = useGetTasks(projectId);
-  let pendingTasks: TaskType[] = tasks ? tasks.filter((task)=>{ return (task.task_update === 'pending')}): []
 
-  
-  let sortedTasks: TaskType[]= useSortHook(sort, tasks || []);
+  const allTasks: TaskType[] = tasks?.data;
+  const myTasks: TaskType[] = tasks?.data2;
+  let pendingTasks: TaskType[] = allTasks ? allTasks.filter((task)=>{ return (task.task_update === 'pending')}): [] 
+  let sortedTasks: TaskType[]= useSortHook(sort, allTasks || []);
   let sortedNoPendingTasks = sortedTasks.filter((task)=> { return task.task_update !== 'pending'})
+
+
+  console.log("LOG ALL ALL TASKS", allTasks)
+  console.log("LOG ALL my TASKS", myTasks)
   
   useEffect(() => {
     console.log('Sorted tasks have changed:', sortedTasks);
@@ -112,7 +117,7 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
 
 
 
-      {tasks && <LeftPanelNavigation myTasks={sortedNoPendingTasks} pendingTasks={pendingTasks} taskMembers={taskMembers.length > 0 ? taskMembers : []} />}
+      {tasks && <LeftPanelNavigation myTasks={myTasks} pendingTasks={pendingTasks} taskMembers={taskMembers.length > 0 ? taskMembers : []} />}
     </div>
   )
 }

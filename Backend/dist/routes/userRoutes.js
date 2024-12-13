@@ -78,5 +78,14 @@ router.get('/verifySessionToken', verifySessionToken, async (req, res) => {
         res.status(401).json({ result: false });
     }
 });
+router.get('/getUserId', verifySessionToken, async (req, res) => {
+    const { userId } = req;
+    if (userId) {
+        res.status(200).json({ userId: userId });
+    }
+    else {
+        res.status(401).json({ userId: userId });
+    }
+});
 export { router };
 //# sourceMappingURL=userRoutes.js.map

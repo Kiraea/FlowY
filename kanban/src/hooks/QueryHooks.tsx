@@ -43,15 +43,15 @@ export const useGetProjects = () => {
         })
     })
 }
-
-export const useGetTasks = (projectId: string): UseQueryResult<TaskType[] | null> => {
-    return useQuery<TaskType[] | null>({
+// UseQueryResult<TaskType[] | null>
+export const useGetTasks = (projectId: string)  => {
+    return useQuery({
         queryKey: ['tasks', projectId],
         queryFn: (async()=> {
             try{
-                let result = await  axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getTasksByProjectId/?projectId=${projectId}`);
+                let result = await  axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getTasksAndMyTasksByProjectId/?projectId=${projectId}`);
                 if (result.status === 200){
-                    return result.data.data 
+                    return result.data
                 }
             }catch(e){
                 if (e instanceof AxiosError){
@@ -60,6 +60,19 @@ export const useGetTasks = (projectId: string): UseQueryResult<TaskType[] | null
             }
         })
     })
+}
+
+export const useGetUserId = async () => {
+    try{
+        let result = await axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getUserId`)
+        if (result.status === 200){
+            return result.data.data;
+        }
+    }catch(e: unknown){
+        if (e instanceof AxiosError){
+            console.log(e.response?.data.error)
+        }
+    }
 }
 
 export const useUpdateTaskStatus=  async ({taskId, newStatus} : {taskId: string, newStatus: string}) => {
