@@ -23,6 +23,8 @@ import { useAddTaskFull } from '../hooks/QueryHooks'
 import { useUpdateTaskFull } from '../hooks/QueryHooks'
 import { selectedTaskContext } from '../context/selectedTaskContext'
 
+import { useGetAllProjectMembersByProjectId } from '../hooks/QueryHooks'
+import { ProjectMembersProvider } from '../context/ProjectMembersContext'
 
 enum Content{
 
@@ -47,10 +49,14 @@ function ProjectPage() {
 
 
   const params = useParams();
-  const projectId = params.projectId;
-  console.log(projectId + "PPPPPPPPPPPPPPPPP");
+  const projectId = params.projectId || '';
+  console.log(projectId + "ProjectId in project page");
 
+  const {data: projectMembers, isError: isErrorProjectMembers, isLoading: isLoadingProjectMembers, error: errorProjectMembers} = useGetAllProjectMembersByProjectId(projectId)
   const {selectedTaskId, setSelectedTaskId, openModal, closeModal, dialogRefUpdate} = useContext(selectedTaskContext)
+
+
+
 
 
   useEffect(()=> {
@@ -247,12 +253,14 @@ function ProjectPage() {
             <h1 className=' flex-1 text-2xl text-center place-self-center bg-primary-bg1 text-white rounded-3xl font-extralight shadow-black shadow-sm font-extralight '>Home Problems</h1>
             <div className='flex-1'></div>
           </div>
-
+          
+          <ProjectMembersProvider projectMembers={projectMembers} isErrorProjectMembers={isErrorProjectMembers} isLoadingProjectMembers={isLoadingProjectMembers} errorProjectMembers={errorProjectMembers}> 
           {content === Content.Main && <ColumnContainer dialogRef={dialogRef}/>}
           {content === Content.People && <People/>}
           {content === Content.Settings && <Settings/>}
           {content === Content.Specifications && <Specifications/>}
           {content === Content.Links && <Links/>}
+          </ProjectMembersProvider>
         </div>
 
 

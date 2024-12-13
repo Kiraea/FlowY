@@ -1,5 +1,5 @@
 import React from 'react'
-import PeopleContainer from '../PeopleFolder/peopleContainer'
+import PeopleContainer from '../PeopleFolder/PeopleContainer'
 function People() {
   return (
     <div className=''>

@@ -48,6 +48,13 @@ const queries = {
             INSERT INTO project_members (project_id, member_id, role)
             VALUES ($1, $2, $3) RETURNING *;
         `,
+
+        addProjectMembersByDisplayName:`
+            INSERT INTO project_members (project_id, member_id, role)
+            VALUES (
+            $1,
+            (SELECT u.id FROM users u WHERE u.display_name = $2),
+            $3) RETURNING *`,
         getProjectsQ:`
             SELECT p.*
             FROM projects p;
@@ -58,8 +65,9 @@ const queries = {
             WHERE p.id = $1;
         `,
         getProjectMembers:`
-            SELECT pm.*
-            FROM project_members pm
+            SELECT pm.role, u.display_name, pm.member_id
+            FROM project_members pm JOIN users u
+                ON pm.member_id = u.id
             WHERE pm.project_id = $1;
         `,
         getProjectByUserIdQ:`

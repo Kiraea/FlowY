@@ -17,7 +17,7 @@ type TaskMember = {
 
 function LeftPanelNavigation({pendingTasks,  myTasks,  taskMembers}: LeftPanelNavigationProps) {
   return (
-    <div className='flex flex-col  gap-10 w-1/6 items-center bg-primary-bg1 border-primary-bg0 border-l-2 xl:flex-row xl:w-full '>
+    <div className='flex flex-col gap-10 w-1/6 items-center bg-primary-bg1 border-primary-bg0 border-l-2 xl:flex-row xl:w-full '>
       <div className='w-full'>
         <div className='bg-primary-bg1 border-white border-2 text-center'>My Tasks</div>
         <div className='flex flex-col flex-1 bg-primary-bg1 overflow-y-scroll '>
@@ -30,7 +30,7 @@ function LeftPanelNavigation({pendingTasks,  myTasks,  taskMembers}: LeftPanelNa
       </div>
       <div className='bg-blue-100'></div>
 
-      <div className='w-full'>
+      <div className='w-full '>
         <div className='bg-primary-bg1  text-center border-white border-2'>Unapproved Tasks</div>
         <div className='flex flex-col flex-1  overflow-y-scroll'>
           <div className='flex-col'>

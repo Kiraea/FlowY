@@ -4,6 +4,7 @@ import axios, { Axios, AxiosError } from 'axios';
 import { UseQueryResult } from '@tanstack/react-query';
 
 import { TaskType, TaskUpdateOption } from '../Types/Types';
+import Project from '../components/Project';
 
 
 export const useUserData = () => {
@@ -159,6 +160,25 @@ export const useGetAllTaskMembersByProjectId = (projectId: string) => {
             }catch(e: unknown){
                 if (e instanceof AxiosError){
                     console.log(e);
+                }
+            }
+        }
+    })
+}
+
+export const useGetAllProjectMembersByProjectId = (projectId: string) => {
+    return useQuery({
+        queryKey: ['projectMembers', projectId],
+        queryFn: async () => {
+            try{
+                let result = await axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getProjectMembersById/?projectId=${projectId}`);
+                if (result.status === 200){
+                    console.log(result.data.message)
+                    return result.data.data
+                }
+            }catch(e: unknown){
+                if (e instanceof AxiosError){
+                    console.log(e.response?.data.error)
                 }
             }
         }

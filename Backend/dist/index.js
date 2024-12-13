@@ -92,7 +92,7 @@ const setupDatabase = async () => {
     await pool.query(`CREATE TYPE status_enum AS ENUM('pending', 'accepted', 'rejected');`);
     await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
     await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
-    await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
+    await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member', member);`);
     */
     await pool.query(`
     CREATE TABLE IF NOT EXISTS users (

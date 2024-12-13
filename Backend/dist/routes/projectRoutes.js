@@ -53,16 +53,16 @@ router.get(`/getProjectsByUserId`, verifySessionToken, async (req, res) => {
         }
     }
 });
-router.post('/getProjectMembersById', async (req, res) => {
-    const { projectId } = req.body;
+router.get('/getProjectMembersById', async (req, res) => {
+    const { projectId } = req.query;
     console.log(projectId + "Dsadas");
     try {
         let result = await pool.query(queries.project.getProjectMembers, [projectId]);
         if (result.rowCount > 0) {
-            res.status(200).json({ data: result.rows, message: "foundProjects", status: "success" });
+            res.status(200).json({ data: result.rows, message: "found project memebrs", status: "success" });
         }
         else {
-            res.status(200).json({ data: null, message: "did not find projects", status: "success" });
+            res.status(200).json({ data: null, message: "did not found project members but success", status: "success" });
         }
     }
     catch (e) {
@@ -80,14 +80,11 @@ const checkIfValidURL = (urlLink) => {
 router.post('/createProject', verifySessionToken, async (req, res) => {
     const { name, description, link, specifications, members } = req.body.projectDetails;
     const { userId } = req;
-    console.log("hello2");
+    console.log(members + "all the members");
     console.log(name, description, link, specifications, members);
-    console.log("hello");
-    let hasMembers = false;
+    let hasMembers = Array.isArray(members) && members.length > 0;
     const githubLink = link === '' ? null : link;
-    if (req.body.members != null || req.body.members != undefined) {
-        hasMembers = true;
-    }
+    console.log(hasMembers, "hasMembersValue");
     if (githubLink !== null) {
         if (checkIfValidURL(githubLink) === false) {
             res.status(405).json({ error: "invalid github link" });
@@ -98,7 +95,7 @@ router.post('/createProject', verifySessionToken, async (req, res) => {
         if (!hasMembers) { // no other members inserted
             let res0 = await pool.query(queries.project.addProjectsQ, [name, description, githubLink, specifications]);
             if (res0.rowCount > 0) {
-                let idR = res0.rows[0].id;
+                let idR = res0.rows[0].id; // projectId btw
                 try {
                     let res2 = await pool.query(queries.project.addProjectMembersQ, [idR, userId, 'leader']);
                     console.log("res2:", res2);
@@ -115,12 +112,24 @@ router.post('/createProject', verifySessionToken, async (req, res) => {
             }
         }
         else {
+            console.log("else statement");
+            let res2;
             let res0 = await pool.query(queries.project.addProjectsQ, [name, description, githubLink, specifications]);
             if (res0.rowCount > 0) {
                 let idR = res0.rows[0].id;
-                let res2 = await pool.query(queries.project.addProjectMembersQ, [idR, userId, 'leader']);
+                try {
+                    res2 = await pool.query(queries.project.addProjectMembersQ, [idR, userId, 'leader']);
+                }
+                catch (e) {
+                    console.log(e + "whitewhitewhite");
+                }
                 for (let i = 0; i < members.length; i++) {
-                    await pool.query(queries.project.addProjectMembersQ, [idR, members[i], 'member']);
+                    try {
+                        let resultMembers = await pool.query(queries.project.addProjectMembersByDisplayName, [idR, members[i], 'member']);
+                    }
+                    catch (e) {
+                        console.log(e + "BLACKBLACKBALCKBLACK");
+                    }
                 }
                 res.status(200).json({ result: res2 });
             }
@@ -128,6 +137,22 @@ router.post('/createProject', verifySessionToken, async (req, res) => {
     }
     catch (e) {
         res.status(402).json({ error: e });
+    }
+});
+router.post('/addProjectMemberByDisplayName', verifySessionToken, async (req, res) => {
+    const { displayName, projectId } = req.body;
+    try {
+        let result = await pool.query(queries.project.addProjectMembersByDisplayName, [projectId, displayName, "member"]);
+        if (result.rowCount > 0) {
+            res.status(200).json({ data: result.rows, message: "added a project member", status: "success" });
+        }
+        else {
+            res.status(200).json({ data: result.rows, message: "did not add a project member but was successful", status: "success" });
+        }
+    }
+    catch (e) {
+        console.log(e);
+        res.status(403).json({ error: "cannot add project member due to errors" });
     }
 });
 router.post('/verifyProjectAccess', verifySessionToken, async (req, res) => {

@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
-import React from 'react'
+import { useState } from 'react';
 import { FaCaretLeft } from "react-icons/fa";
 import { FaCaretRight } from "react-icons/fa";
 import { GrStatusCriticalSmall } from "react-icons/gr";
@@ -12,16 +12,18 @@ import { useParams } from 'react-router-dom';
 import {useContext } from 'react'
 import { selectedTaskContext } from '../../context/selectedTaskContext';
 import { TaskType, TaskStyle, TaskUpdateOption } from '../../Types/Types';
-
+import { RiAddBoxFill } from "react-icons/ri";
 import { IoIosCheckmark } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
+import { IoIosAddCircle } from "react-icons/io"; 
+import { ProjectMembersContext } from '../../context/ProjectMembersContext';
 type TaskProps= {
     task: TaskType
     taskMembers: TaskMember[],
     taskStyle: TaskStyle
     
 }
-
+import { MdAddReaction } from "react-icons/md";
 
 enum Priority {
     high = 'high',
@@ -33,8 +35,11 @@ const statusColor = {
     medium: 'bg-yellow-500',
     high: 'bg-red-500'
 }
-
-
+const statusColorText = {
+    low: 'text-green-500',
+    medium: 'text-yellow-500',
+    high: 'text-red-500'
+}
 
 type TaskMember = {
   display_name: string,
@@ -45,8 +50,14 @@ type TaskMember = {
 
 
 function Task({task, taskMembers, taskStyle}: TaskProps  ) {
-
+  const [openMemberList, setOpenMemberList] = useState(false)
   const {setSelectedTaskId, selectedTaskId, openModal} = useContext(selectedTaskContext)
+  const {isErrorProjectMembers, isLoadingProjectMembers, errorProjectMembers, projectMembers} = useContext(ProjectMembersContext);
+
+  projectMembers.map((pm)=>{
+    console.log(pm.member_id + pm.role)
+  })
+
 
   const params = useParams();
   const projectId = params.projectId;
@@ -105,6 +116,21 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
       {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onUpdateTaskUpdate(e, task.id, TaskUpdateOption.accept)}}><IoIosCheckmark className=''/></button>}
       {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onTaskDelete(e,task.id)}}><IoClose className=' '/></button>}     
 
+    </div>
+    <div className={`absolute top-0 right-0`}>
+      <button className="z-30" onMouseEnter={()=>{setOpenMemberList(true)}} onMouseLeave={()=>{setOpenMemberList(false)}}> <MdAddReaction className="relative"/></button>
+      {openMemberList &&
+      
+      <div className='absolute top-0 -right-36 bg-primary-bg1 border-2 border-primary-highlight2 z-10'>
+        {projectMembers.length > 0 && projectMembers.map((member)=> {
+          return (
+          <div key={member.id} className='flex p-5 gap-5' onMouseEnter={()=>{setOpenMemberList(true)}} onMouseLeave={()=>{setOpenMemberList(false)}}>
+            <input type='checkbox'/>
+            <label>{member.display_name}</label>
+          </div>)
+        })}
+      </div>
+      }
     </div>
   </div>
   )
