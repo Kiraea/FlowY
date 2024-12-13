@@ -99,7 +99,7 @@ run();
 const setupDatabase = async () => {
     await pool.query("SET search_path TO 'kanban';");
 
-    /*
+  
   await pool.query(`DROP TABLE IF EXISTS task_comments;`);
   await pool.query(`DROP TABLE IF EXISTS task_members;`);
   await pool.query(`DROP TABLE IF EXISTS project_members;`);
@@ -120,7 +120,6 @@ const setupDatabase = async () => {
   await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
   await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
 
-*/
 
     await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -206,6 +205,7 @@ const setupDatabase = async () => {
             task_title VARCHAR(255) NOT NULL,
             task_priority task_priority_type NOT NULL,
             task_status task_status_type NOT NULL,
+            task_update status_enum NOT NULL,
             created_at DATE DEFAULT CURRENT_DATE,
             project_id uuid NOT NULL,
             CONSTRAINT fk_project_id_tasks FOREIGN KEY (project_id)

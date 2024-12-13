@@ -47,14 +47,15 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
 
 
   const {data: tasks, isLoading, isError , error} = useGetTasks(projectId);
-  let pendingTask: TaskType[] = tasks ? tasks.filter((task)=>{ return (task.task_update === 'pending')}): []
+  let pendingTasks: TaskType[] = tasks ? tasks.filter((task)=>{ return (task.task_update === 'pending')}): []
 
   
-  let sortedTask: TaskType[]= useSortHook(sort, tasks || []);
-
+  let sortedTasks: TaskType[]= useSortHook(sort, tasks || []);
+  let sortedNoPendingTasks = sortedTasks.filter((task)=> { return task.task_update !== 'pending'})
+  
   useEffect(() => {
-    console.log('Sorted tasks have changed:', sortedTask);
-  }, [sortedTask]);  // This effect will run every time sortedTasks change
+    console.log('Sorted tasks have changed:', sortedTasks);
+  }, [sortedTasks]);  // This effect will run every time sortedTasks change
   const {mutateAsync : updateTaskStatusQ} = useMutation({
     mutationFn : useUpdateTaskStatus,
     onSuccess: () => queryClient.invalidateQueries({queryKey: ['tasks', projectId]}) 
@@ -103,7 +104,7 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
         <div className='grid grid-cols-4 gap-5 lg:grid-cols-2 md:grid-cols-1'>
           <DndContext onDragEnd={handleDragEnd}>
             {COLUMNS.map((obj)=>{
-              return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={sortedTask?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
+              return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={sortedNoPendingTasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
             })}
           </DndContext>
         </div>
@@ -111,7 +112,7 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
 
 
 
-      {tasks && <LeftPanelNavigation tasks={pendingTask} taskMembers={taskMembers.length > 0 ? taskMembers : []} />}
+      {tasks && <LeftPanelNavigation myTasks={sortedNoPendingTasks} pendingTasks={pendingTasks} taskMembers={taskMembers.length > 0 ? taskMembers : []} />}
     </div>
   )
 }

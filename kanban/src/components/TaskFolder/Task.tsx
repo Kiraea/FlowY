@@ -6,12 +6,12 @@ import { GrStatusCriticalSmall } from "react-icons/gr";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import { IoIosSettings } from "react-icons/io";
-import { useDeleteTask, useUpdateTaskFull } from '../../hooks/QueryHooks';
+import { useDeleteTask, useUpdateTaskFull, useUpdateTaskStatus, useUpdateTaskUpdate } from '../../hooks/QueryHooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import {useContext } from 'react'
 import { selectedTaskContext } from '../../context/selectedTaskContext';
-import { TaskType, TaskStyle } from '../../Types/Types';
+import { TaskType, TaskStyle, TaskUpdateOption } from '../../Types/Types';
 
 import { IoIosCheckmark } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
@@ -71,6 +71,19 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
   const style =transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, } : undefined
 
 
+  const {mutateAsync: updateTaskUpdateMutation} = useMutation({
+    mutationFn: useUpdateTaskUpdate,
+    onSuccess: ()=> {queryClient.invalidateQueries({queryKey: ['tasks', projectId]})}
+  })
+
+  const onUpdateTaskUpdate = async (e: React.MouseEvent<HTMLButtonElement>, taskId: string, taskUpdateOption: TaskUpdateOption) => {
+
+    e.preventDefault()
+    console.log(taskId + "ondelete");
+    updateTaskUpdateMutation({taskId, taskUpdateOption})
+  }
+
+
 
   return (
   <div className='group border-primary-bg05 hover:bg-primary-bg3 border-b-2 pt-4 pb-2 ps-5 pe-2  gap-3 items-start bg-primary-bg1 relative hover:bg-primary-bg1 transition-all duration-75'>
@@ -89,8 +102,8 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
       {taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=>{console.log("dsaldsa"); setSelectedTaskId(task.id); openModal()}}><IoIosSettings/></button>}
       {taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=>{e.stopPropagation(); onTaskDelete(e, task.id)}}><RiDeleteBin6Fill/></button>}
 
-      {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=> {}}><IoIosCheckmark className=''/></button>}
-      {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=> {}}><IoClose className=' '/></button>}     
+      {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onUpdateTaskUpdate(e, task.id, TaskUpdateOption.accept)}}><IoIosCheckmark className=''/></button>}
+      {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onTaskDelete(e,task.id)}}><IoClose className=' '/></button>}     
 
     </div>
   </div>

@@ -2,23 +2,25 @@ import express from 'express';
 import { pool } from '../index.js';
 import { queries } from '../queries/query.js';
 const router = express();
-router.post('/addTask', async (req, res) => {
-    const { taskTitle, taskPriority, taskStatus, projectId } = req.body;
-    console.log(taskTitle, taskPriority, taskStatus, projectId);
-    try {
-        let result = await pool.query(queries.tasks.addTaskQ, [taskTitle, taskPriority, taskStatus, projectId]);
-        if (result.rowCount > 0) {
-            res.status(200).json({ data: result.rows, message: "succesfully added", status: "success" });
+/*
+router.post('/addTask', async (req,res)=> {
+    const {taskTitle, taskPriority, taskStatus, projectId} = req.body
+    console.log(taskTitle, taskPriority, taskStatus, projectId)
+    
+    try{
+        let result = await pool.query(queries.tasks.addTaskQ, [taskTitle, taskPriority, taskStatus, projectId])
+        if (result.rowCount > 0){
+            res.status(200).json({data:result.rows, message: "succesfully added", status:"success"});
+
+        }else{
+            res.status(200).json({data:null, message: "can't be added but worked", status:"success"})
         }
-        else {
-            res.status(200).json({ data: null, message: "can't be added but worked", status: "success" });
-        }
+    }catch(e){
+        console.log(e)
+        res.status(403).json({error: "does not work"})
     }
-    catch (e) {
-        console.log(e);
-        res.status(403).json({ error: "does not work" });
-    }
-});
+})
+*/
 router.get('/getTaskMembersByProjectId', async (req, res) => {
     const { projectId } = req.query;
     if (projectId === undefined) {
@@ -88,7 +90,7 @@ router.post('/addTaskFull', async (req, res) => {
     const { title, priority, status, projectId } = req.body;
     console.log(title, priority, status, projectId);
     try {
-        let result = await pool.query(queries.tasks.addTaskFullQ, [title, priority, status, projectId]);
+        let result = await pool.query(queries.tasks.addTaskFullQ, [title, priority, status, projectId, "pending"]);
         if (result.rowCount > 0) {
             res.status(200).json({ data: result.rows, message: "succesfully added", status: "success" });
         }
@@ -99,6 +101,25 @@ router.post('/addTaskFull', async (req, res) => {
     catch (e) {
         console.log(e);
         res.status(403).json({ error: "cannot add task" });
+    }
+});
+router.patch('/updateTaskUpdate/:taskId', async (req, res) => {
+    const { taskId } = req.params;
+    const { taskUpdateOption } = req.body;
+    console.log(taskUpdateOption, "THIS SHOULD BE task update options");
+    console.log(taskUpdateOption + "THIS SHOULD BE task update options");
+    try {
+        let result = await pool.query(queries.tasks.updateTaskUpdate, [taskUpdateOption, taskId]);
+        if (result.rowCount > 0) {
+            res.status(200).json({ data: result.rows, message: "succesfully updated task status", status: "success" });
+        }
+        else {
+            res.status(200).json({ data: null, message: "did not update task status but query was succesful", status: "success" });
+        }
+    }
+    catch (e) {
+        console.log(e);
+        res.status(403).json({ error: "did not update task status due to errors" });
     }
 });
 router.delete(`/deleteTask/:taskId`, async (req, res) => {

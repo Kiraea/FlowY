@@ -3,7 +3,7 @@ import { axiosInstance } from '../axios/axios'
 import axios, { Axios, AxiosError } from 'axios';
 import { UseQueryResult } from '@tanstack/react-query';
 
-import { TaskType } from '../Types/Types';
+import { TaskType, TaskUpdateOption } from '../Types/Types';
 
 
 export const useUserData = () => {
@@ -118,9 +118,10 @@ export const useUpdateTaskFull = async ({taskId, title, status, priority} : {tas
     }
 }
 
-export const useUpdateTaskUpdate = async ({taskId, task_update}: {taskId: string, task_update: string}) => {
+export const useUpdateTaskUpdate = async ({taskId, taskUpdateOption}: {taskId: string, taskUpdateOption: TaskUpdateOption}) => {
+    console.log(taskUpdateOption + " this is taskuPDATEfunction in quyery hooks")
     try{
-        let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateTaskUpdate/${taskId}`, {task_update: task_update})
+        let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateTaskUpdate/${taskId}`, {taskUpdateOption: taskUpdateOption})
         if(result.status === 200){
             result.data.data
         }

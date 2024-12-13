@@ -73,28 +73,24 @@ run();
 // by doign search_path to
 const setupDatabase = async () => {
     await pool.query("SET search_path TO 'kanban';");
-    /*
-  await pool.query(`DROP TABLE IF EXISTS task_comments;`);
-  await pool.query(`DROP TABLE IF EXISTS task_members;`);
-  await pool.query(`DROP TABLE IF EXISTS project_members;`);
-  await pool.query(`DROP TABLE IF EXISTS friend_request;`);
-  await pool.query(`DROP TABLE IF EXISTS user_sessions;`);
-  await pool.query(`DROP TABLE IF EXISTS friends;`);
-  await pool.query(`DROP TABLE IF EXISTS users;`);
-  await pool.query(`DROP TABLE IF EXISTS tasks;`);
-  await pool.query(`DROP TABLE IF EXISTS projects;`);
-
-  // Drop types (now that tables are gone)
-  await pool.query(`DROP TYPE IF EXISTS status_enum CASCADE;`);
-  await pool.query(`DROP TYPE IF EXISTS task_priority_type CASCADE;`);
-  await pool.query(`DROP TYPE IF EXISTS task_status_type CASCADE;`);
-  await pool.query(`DROP TYPE IF EXISTS role_type CASCADE;`);
-  await pool.query(`CREATE TYPE status_enum AS ENUM('pending', 'accepted', 'rejected');`);
-  await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
-  await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
-  await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
-
-*/
+    await pool.query(`DROP TABLE IF EXISTS task_comments;`);
+    await pool.query(`DROP TABLE IF EXISTS task_members;`);
+    await pool.query(`DROP TABLE IF EXISTS project_members;`);
+    await pool.query(`DROP TABLE IF EXISTS friend_request;`);
+    await pool.query(`DROP TABLE IF EXISTS user_sessions;`);
+    await pool.query(`DROP TABLE IF EXISTS friends;`);
+    await pool.query(`DROP TABLE IF EXISTS users;`);
+    await pool.query(`DROP TABLE IF EXISTS tasks;`);
+    await pool.query(`DROP TABLE IF EXISTS projects;`);
+    // Drop types (now that tables are gone)
+    await pool.query(`DROP TYPE IF EXISTS status_enum CASCADE;`);
+    await pool.query(`DROP TYPE IF EXISTS task_priority_type CASCADE;`);
+    await pool.query(`DROP TYPE IF EXISTS task_status_type CASCADE;`);
+    await pool.query(`DROP TYPE IF EXISTS role_type CASCADE;`);
+    await pool.query(`CREATE TYPE status_enum AS ENUM('pending', 'accepted', 'rejected');`);
+    await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
+    await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
+    await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member');`);
     await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -172,6 +168,7 @@ const setupDatabase = async () => {
             task_title VARCHAR(255) NOT NULL,
             task_priority task_priority_type NOT NULL,
             task_status task_status_type NOT NULL,
+            task_update status_enum NOT NULL,
             created_at DATE DEFAULT CURRENT_DATE,
             project_id uuid NOT NULL,
             CONSTRAINT fk_project_id_tasks FOREIGN KEY (project_id)

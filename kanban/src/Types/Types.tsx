@@ -18,3 +18,7 @@ export enum TaskStyle {
   KanbanStyle = "KanbanStyle",
   PendingStyle = "PendingStyle"
 }
+export enum TaskUpdateOption {
+  accept = "accepted",
+  reject = "rejected",
+}

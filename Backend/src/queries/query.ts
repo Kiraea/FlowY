@@ -115,9 +115,9 @@ const queries = {
             ($1, $2, $3) RETURNING *;
         `,
         addTaskFullQ:`
-            INSERT INTO tasks (task_title, task_priority, task_status, project_id)
+            INSERT INTO tasks (task_title, task_priority, task_status, project_id, task_update)
             VALUES
-            ($1, $2, $3, $4) RETURNING *;
+            ($1, $2, $3, $4, $5) RETURNING *;
         `,
         deleteTaskQ:`
             DELETE FROM tasks
@@ -127,7 +127,12 @@ const queries = {
             UPDATE tasks
             SET task_title = $1, task_status = $2, task_priority = $3
             WHERE id = $4;
-        `
+        `,
+        updateTaskUpdate:`
+            UPDATE tasks
+            SET task_update = $1
+            WHERE id = $2 RETURNING *;
+        `,
 
     }
 
