@@ -24,7 +24,6 @@ import { useUpdateTaskFull } from '../hooks/QueryHooks'
 import { selectedTaskContext } from '../context/selectedTaskContext'
 
 import { useGetAllProjectMembersByProjectId } from '../hooks/QueryHooks'
-import { ProjectMembersProvider } from '../context/ProjectMembersContext'
 import { MemberRoleContext, MemberRoleProvider } from '../context/MemberRoleContext'
 
 enum Content{
@@ -53,14 +52,11 @@ function ProjectPage() {
   const projectId = params.projectId || '';
   console.log(projectId + "ProjectId in project page");
 
-  const {data: projectMembers, isError: isErrorProjectMembers, isLoading: isLoadingProjectMembers, error: errorProjectMembers} = useGetAllProjectMembersByProjectId(projectId)
-  const {selectedTaskId, setSelectedTaskId, openModal, closeModal, dialogRefUpdate} = useContext(selectedTaskContext)
+  const {selectedTaskId, selectedPriority, selectedStatus, selectedTitle, openModal, closeModal, dialogRefUpdate} = useContext(selectedTaskContext)
 
-  useEffect(()=> {
-    if (projectMembers){
-      console.log("There is project memebrs and its updating");
-    }
-  }, [projectMembers])
+  console.log(selectedPriority, selectedPriority, selectedTitle, selectedTaskId + "dksaodksaoda");
+
+
 
 
 
@@ -164,7 +160,7 @@ function ProjectPage() {
             <label>Priority</label>
             <div className='flex gap-5 justify-left'>
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3 shadow-black shadow-sm'>
-                  <input type='radio' value="low"  name='priority' className='hidden peer' />
+                  <input type='radio' value="low"  name='priority'  className='hidden peer' />
                   <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-green-500 peer-checked:rounded-lg transition-colors  ">Low</span>
                 </label>
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3'>
@@ -180,7 +176,7 @@ function ProjectPage() {
 
             <div className='flex flex-col gap-2 '>
               <label>Status</label>
-              <select name='status' className='w-1/2 text-white bg-primary-bg2 hover:bg-primary-bg2 rounded-sm shadow-black shadow-sm'>
+              <select name='status'  className='w-1/2 text-white bg-primary-bg2 hover:bg-primary-bg2 rounded-sm shadow-black shadow-sm'>
                 <option className='' value="todo">Todo</option>
                 <option className='' value="in-progress">In-Progress</option>
                 <option className='' value="review">To Review</option>
@@ -203,22 +199,22 @@ function ProjectPage() {
           <form className='w-full h-auto flex flex-col gap-5' onSubmit={(e)=>{onTaskUpdate(e)}}>
             <div className='flex flex-col'>
               <label>Title</label>
-              <input type='text' name='title' required className='input-types bg-primary-bg1 shadow-sm shadow-black'></input>
+              <input type='text' name='title' defaultValue={selectedTitle} required className='input-types bg-primary-bg1 shadow-sm shadow-black'></input>
             </div>
 
             <div className='flex flex-col'> 
             <label>Priority</label>
             <div className='flex gap-5 justify-left'>
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3 shadow-black shadow-sm'>
-                  <input type='radio' defaultChecked value="low"  name='priority' className='hidden peer' />
+                  <input type='radio' checked={selectedPriority === 'low'} value="low"  name='priority' className='hidden peer' />
                   <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-green-500 peer-checked:rounded-lg transition-colors  ">Low</span>
                 </label>
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1 hover:bg-primary-bg3'>
-                  <input type='radio' value="medium" name='priority' className='hidden peer'/>
+                  <input type='radio' checked={selectedPriority === 'medium'} value="medium" name='priority' className='hidden peer'/>
                   <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-yellow-400 peer-checked:rounded-lg shadow-black shadow-sm transition-colors ">Medium</span>
                 </label >
                 <label className='flex flex-col bg-primary-bg1 rounded-lg text-white flex-1  hover:bg-primary-bg3'>
-                  <input type='radio'value="high" name='priority' className='hidden peer'/>
+                  <input type='radio' checked={selectedPriority === 'high'} value="high" name='priority' className='hidden peer'/>
                   <span className="p-5 sm:p-2 w-full h-full peer-checked:bg-red-400  peer-checked:rounded-lg  shadow-black shadow-sm transition-colors">High</span>
                 </label>
               </div>
@@ -226,7 +222,7 @@ function ProjectPage() {
 
             <div className='flex flex-col gap-2 '>
               <label>Status</label>
-              <select name='status' className='w-1/2 text-white bg-primary-bg2 hover:bg-primary-bg2 rounded-sm shadow-black shadow-sm'>
+              <select name='status' defaultValue={selectedStatus} className='w-1/2 text-white bg-primary-bg2 hover:bg-primary-bg2 rounded-sm shadow-black shadow-sm'>
                 <option className='' value="todo">Todo</option>
                 <option className='' value="in-progress">In-Progress</option>
                 <option className='' value="review">To Review</option>
@@ -260,7 +256,6 @@ function ProjectPage() {
             <div className='flex-1'></div>
           </div>
           
-          <ProjectMembersProvider projectMembers={projectMembers} isErrorProjectMembers={isErrorProjectMembers} isLoadingProjectMembers={isLoadingProjectMembers} errorProjectMembers={errorProjectMembers}> 
             <MemberRoleProvider myRole={myRole} setMyRole={setMyRole}>
           {content === Content.Main && <ColumnContainer dialogRef={dialogRef}/>}
           {content === Content.People && <People/>}
@@ -268,7 +263,6 @@ function ProjectPage() {
           {content === Content.Specifications && <Specifications/>}
           {content === Content.Links && <Links/>}
             </MemberRoleProvider> 
-          </ProjectMembersProvider>
         </div>
 
 

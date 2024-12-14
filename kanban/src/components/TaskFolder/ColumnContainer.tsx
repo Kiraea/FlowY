@@ -63,7 +63,7 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
   }, [sortedTasks]);  // This effect will run every time sortedTasks change
   const {mutateAsync : updateTaskStatusQ} = useMutation({
     mutationFn : useUpdateTaskStatus,
-    onSuccess: () => queryClient.invalidateQueries({queryKey: ['tasks', projectId]}) 
+    onSuccess: () => queryClient.refetchQueries({queryKey: ['tasks', projectId]}) 
   }) 
   //console.log(taskMembers)
   async function handleDragEnd(event: DragEndEvent){
@@ -95,11 +95,11 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
         <div className='flex items-center'>
 
           <div className='flex-1'>
-            {myRole === 'leader' && <button className=' bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>{dialogRef.current?.showModal()}}><span className='text-xl font-bold'>Add Task</span></button>}
+            {(myRole === 'leader' || myRole ==='admin') && <button className=' bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>{dialogRef.current?.showModal()}}><span className='text-xl font-bold'>Add Task</span></button>}
           </div>
           
           <div className='ml-auto '>
-            <select onChange={(e)=> {setSort(e.target.value as Sort)}} className=' bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm'>
+            <select onChange={(e)=> {setSort(e.target.value as Sort)}} className='font-bold bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm'>
               <option value={Sort.Priority}>Priority</option>
               <option value={Sort.Title}>Title</option>
             </select>

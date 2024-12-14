@@ -11,8 +11,9 @@ import { useNavigate } from 'react-router-dom';
 
 import { axiosInstance } from '../axios/axios';
 import {ErrorContext, ErrorComponent} from '../context/ErrorContext';
-
-
+import { useMutation } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 type ProjectDetailsType = {
   name: string,
   specifications: string,
@@ -22,6 +23,8 @@ type ProjectDetailsType = {
 }
 
 function CreateProjectPage() {
+
+
   const navigate = useNavigate()
   const {errorC, setErrorC} = useContext(ErrorContext)
   const [projectName, setProjectName] = useState('')
@@ -42,7 +45,6 @@ function CreateProjectPage() {
       return member.toLowerCase() !== (memberName.toLowerCase())
     }))
   }
-
   const submitProjectDetails = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     let isError = false;

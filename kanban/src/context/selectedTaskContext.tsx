@@ -3,7 +3,13 @@ import { ReactNode } from "react";
 import { useRef } from "react";
 type SelectedTaskType = {
     selectedTaskId: string,
+    selectedPriority: string,
+    selectedTitle: string,
+    selectedStatus: string,
     setSelectedTaskId: React.Dispatch<React.SetStateAction<string>>,
+    setSelectedPriority: React.Dispatch<React.SetStateAction<string>>,
+    setSelectedTitle: React.Dispatch<React.SetStateAction<string>>,
+    setSelectedStatus: React.Dispatch<React.SetStateAction<string>>,
     openModal: () => void,
     closeModal: () => void,
     dialogRefUpdate: RefObject<HTMLDialogElement>|null
@@ -12,7 +18,15 @@ type SelectedTaskType = {
 
 export const selectedTaskContext = createContext<SelectedTaskType>({
     selectedTaskId: "",
+    selectedPriority: "",
+    selectedStatus: "",
+    selectedTitle: "",
+
+
     setSelectedTaskId: () => {},
+    setSelectedPriority: () => {},
+    setSelectedStatus: () => {},
+    setSelectedTitle: ()=> {},
     openModal: () => {},
     closeModal: () => {},
     dialogRefUpdate: null,
@@ -24,6 +38,13 @@ type selectedTaskContextProviderProps = {
 }
 export function SelectedTaskContextProvider ({children} :selectedTaskContextProviderProps){
     const [selectedTaskId, setSelectedTaskId] = useState("")
+    const [selectedPriority, setSelectedPriority] = useState("")
+    const [selectedStatus, setSelectedStatus] = useState("")
+    const [selectedTitle, setSelectedTitle] = useState("")
+
+
+
+
     const dialogRefUpdate = useRef<HTMLDialogElement>(null)
     const openModal = () => {
         dialogRefUpdate.current?.showModal()
@@ -39,10 +60,10 @@ export function SelectedTaskContextProvider ({children} :selectedTaskContextProv
         if (selectedTaskId){
             console.log("selected useEFFECT"+ selectedTaskId)
         }
-    }, [selectedTaskId])
+    }, [selectedTaskId, selectedPriority, selectedStatus, selectedTitle])
 
     return (
-        <selectedTaskContext.Provider value={{selectedTaskId, setSelectedTaskId, openModal, closeModal, dialogRefUpdate}}>
+        <selectedTaskContext.Provider value={{selectedPriority, selectedStatus, selectedTitle, setSelectedPriority, setSelectedStatus, setSelectedTitle,selectedTaskId, setSelectedTaskId, openModal, closeModal, dialogRefUpdate}}>
             {children}
         </selectedTaskContext.Provider>
     )

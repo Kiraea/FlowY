@@ -6,7 +6,7 @@ import { GrStatusCriticalSmall } from "react-icons/gr";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import { IoIosSettings } from "react-icons/io";
-import { useDeleteTask, useUpdateTaskFull, useUpdateTaskStatus, useUpdateTaskUpdate } from '../../hooks/QueryHooks';
+import { useDeleteTask, useGetAllProjectMembersByProjectId, useUpdateTaskFull, useUpdateTaskStatus, useUpdateTaskUpdate } from '../../hooks/QueryHooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import {useContext } from 'react'
@@ -55,13 +55,13 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
   const {myRole, setMyRole} = useContext(MemberRoleContext);
   console.log(myRole + "myRoletASK");
   const [openMemberList, setOpenMemberList] = useState(false)
-  const {setSelectedTaskId, selectedTaskId, openModal} = useContext(selectedTaskContext)
-  const {isErrorProjectMembers, isLoadingProjectMembers, errorProjectMembers, projectMembers} = useContext(ProjectMembersContext);
+  const {setSelectedTaskId, setSelectedPriority, setSelectedTitle, setSelectedStatus, selectedTaskId, openModal} = useContext(selectedTaskContext)
 
 
   const params = useParams();
   const projectId = params.projectId;
 
+  const {isError: isErrorProjectMembers, isLoading:  isLoadingProjectMembers, error:  errorProjectMembers, data:  projectMembers} = useGetAllProjectMembersByProjectId(projectId);
   const {attributes, listeners, setNodeRef, transform} = useDraggable({
     id: task.id, 
   })
@@ -94,7 +94,7 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
 
 
   return (
-  <div className='group border-primary-bg05 hover:bg-primary-bg3 border-b-2 pt-4 pb-2 ps-5 pe-2  gap-3 items-start bg-primary-bg1 relative hover:bg-primary-bg1 transition-all duration-75'>
+  <div className='shadow-sm shadow-black group border-primary-bg05 hover:bg-primary-bg3 border-b-2 pt-4 pb-2 ps-5 pe-2  gap-3 items-start bg-primary-bg1 relative hover:bg-primary-bg1 transition-all duration-75'>
     <div ref={setNodeRef} {...listeners} {...attributes} style={style} className='flex flex-col gap-3'>
       <div className='font-mono group-hover:ml-10 transition-all'>{task.task_title}</div>
       <ul className='flex justify-end w-full gap-2 items-center'>
@@ -105,9 +105,12 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
           {taskMembers.length === 0 && <li className='text-xs px-1 rounded-lg bg-primary-bg2 shadow-black shadow-sm'>Not Assigned</li>}
         </ul>
     </div>
+
+
+
     <div className={`absolute top-0 left-0 ${statusColor[task.task_priority as Priority]} h-full w-1 group-hover:w-8 flex flex-col items-center justify-evenly group-hover:opacity-100 transition-all`}>
 
-      {myRole !== "member" && taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=>{ setSelectedTaskId(task.id); openModal()}}><IoIosSettings/></button>}
+      {myRole !== "member" && taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=>{ setSelectedTaskId(task.id); setSelectedPriority(task.task_status); setSelectedPriority(task.task_priority); setSelectedTitle(task.task_title);  openModal()}}><IoIosSettings/></button>}
       {myRole !== "member" && taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=>{e.stopPropagation(); onTaskDelete(e, task.id)}}><RiDeleteBin6Fill/></button>}
 
       {myRole !== "member" && taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onUpdateTaskUpdate(e, task.id, TaskUpdateOption.accept)}}><IoIosCheckmark className=''/></button>}

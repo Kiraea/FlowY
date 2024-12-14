@@ -150,6 +150,7 @@ export const useGetAllTaskMembersByProjectId = (projectId: string) => {
         queryKey: ['taskMembers', projectId], // not sure if this correctw remove projectgId if error
         queryFn: async () => {
             try{
+                console.log("Fetching project members...");
                 let result = await axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getTaskMembersByProjectId/?projectId=${projectId}`);
                 if (result.status === 200){
                     console.log(result.data.data)
@@ -165,6 +166,7 @@ export const useGetAllTaskMembersByProjectId = (projectId: string) => {
 }
 
 export const useGetAllProjectMembersByProjectId = (projectId: string) => {
+    console.log(projectId + "useGetAllrpjectmembers hooks/")
     return useQuery({
         queryKey: ['projectMembers', projectId],
         queryFn: async () => {
@@ -186,6 +188,21 @@ export const useGetAllProjectMembersByProjectId = (projectId: string) => {
 export const useUpdateProjectMemberRole = async ({projectId, role, memberId}: {projectId: string, role: string, memberId: string}) => {
     try{
         let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateProjectMemberRole/${projectId}`, {role, memberId})
+        if (result.status === 200) {
+            console.log(result.data.data)
+            return result.data.data
+        }
+    }catch(e: unknown){
+        if (e instanceof AxiosError){
+            console.log(e);
+        }
+    }
+}
+
+
+export const useAddProjectMember = async ({projectId, displayName} : {projectId: string, displayName: string}) => {
+    try{
+        let result = await axiosInstance.post(`${import.meta.env.VITE_BASE_URL_LINK}/addProjectMemberByDisplayName`, {projectId, displayName})
         if (result.status === 200) {
             console.log(result.data.data)
             return result.data.data
