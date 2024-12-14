@@ -23,7 +23,6 @@ type TaskMember = {
 
 
 function TaskContainer({columnId, columnTitle, tasks, taskMembers}: TaskDetailsProps) {
-  console.log("taskcontainer" + taskMembers)
 
 
   const {setNodeRef} = useDroppable({

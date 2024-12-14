@@ -94,7 +94,7 @@ export const useAddTaskFull = async (formData: FormData) => {
     try{
         let result = await axiosInstance.post(`${import.meta.env.VITE_BASE_URL_LINK}/addTaskFull`, formData);
         if(result.status === 200){
-          console.log(result.data)
+          //console.log(result.data)
         }
     }catch(e:unknown){
       if(e instanceof AxiosError){
@@ -109,7 +109,7 @@ export const useDeleteTask = async (taskId: string) => {
     try{
         let result = await axiosInstance.delete(`${import.meta.env.VITE_BASE_URL_LINK}/deleteTask/${taskId}`)
         if(result.status === 200){
-            result.data.data
+            return result.data.data
         }
     }catch(e:unknown){
       if(e instanceof AxiosError){
@@ -119,11 +119,10 @@ export const useDeleteTask = async (taskId: string) => {
 }
 
 export const useUpdateTaskFull = async ({taskId, title, status, priority} : {taskId: string, title:string, status:string, priority: string }) => {
-    console.log("dsadsadsdsa" + taskId);
     try{
         let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateTask/${taskId}`, {title: title, status: status, priority: priority});
         if(result.status === 200){
-            result.data.data
+            return result.data.data
         }
     }catch(e:unknown){
       if(e instanceof AxiosError){
@@ -133,11 +132,10 @@ export const useUpdateTaskFull = async ({taskId, title, status, priority} : {tas
 }
 
 export const useUpdateTaskUpdate = async ({taskId, taskUpdateOption}: {taskId: string, taskUpdateOption: TaskUpdateOption}) => {
-    console.log(taskUpdateOption + " this is taskuPDATEfunction in quyery hooks")
     try{
         let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateTaskUpdate/${taskId}`, {taskUpdateOption: taskUpdateOption})
         if(result.status === 200){
-            result.data.data
+            return result.data.data
         }
     }catch(e:unknown){
         if(e instanceof AxiosError){
@@ -149,7 +147,7 @@ export const useUpdateTaskUpdate = async ({taskId, taskUpdateOption}: {taskId: s
 
 export const useGetAllTaskMembersByProjectId = (projectId: string) => {
     return useQuery({
-        queryKey: ['taskMembers'],
+        queryKey: ['taskMembers', projectId], // not sure if this correctw remove projectgId if error
         queryFn: async () => {
             try{
                 let result = await axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getTaskMembersByProjectId/?projectId=${projectId}`);
@@ -183,4 +181,18 @@ export const useGetAllProjectMembersByProjectId = (projectId: string) => {
             }
         }
     })
+}
+
+export const useUpdateProjectMemberRole = async ({projectId, role, memberId}: {projectId: string, role: string, memberId: string}) => {
+    try{
+        let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/updateProjectMemberRole/${projectId}`, {role, memberId})
+        if (result.status === 200) {
+            console.log(result.data.data)
+            return result.data.data
+        }
+    }catch(e: unknown){
+        if (e instanceof AxiosError){
+            console.log(e);
+        }
+    }
 }

@@ -24,6 +24,7 @@ type TaskProps= {
     
 }
 import { MdAddReaction } from "react-icons/md";
+import { MemberRoleContext } from '../../context/MemberRoleContext';
 
 enum Priority {
     high = 'high',
@@ -50,13 +51,12 @@ type TaskMember = {
 
 
 function Task({task, taskMembers, taskStyle}: TaskProps  ) {
+
+  const {myRole, setMyRole} = useContext(MemberRoleContext);
+  console.log(myRole + "myRoletASK");
   const [openMemberList, setOpenMemberList] = useState(false)
   const {setSelectedTaskId, selectedTaskId, openModal} = useContext(selectedTaskContext)
   const {isErrorProjectMembers, isLoadingProjectMembers, errorProjectMembers, projectMembers} = useContext(ProjectMembersContext);
-
-  projectMembers.map((pm)=>{
-    console.log(pm.member_id + pm.role)
-  })
 
 
   const params = useParams();
@@ -65,13 +65,11 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
   const {attributes, listeners, setNodeRef, transform} = useDraggable({
     id: task.id, 
   })
-  console.log(taskMembers); 
   const queryClient = useQueryClient()
     
   const onTaskDelete = async (e: React.MouseEvent<HTMLButtonElement>, taskId: string) => {
 
     e.preventDefault()
-    console.log(taskId + "ondelete");
     deleteTaskMutation(taskId)
   }
 
@@ -90,7 +88,6 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
   const onUpdateTaskUpdate = async (e: React.MouseEvent<HTMLButtonElement>, taskId: string, taskUpdateOption: TaskUpdateOption) => {
 
     e.preventDefault()
-    console.log(taskId + "ondelete");
     updateTaskUpdateMutation({taskId, taskUpdateOption})
   }
 
@@ -110,11 +107,11 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
     </div>
     <div className={`absolute top-0 left-0 ${statusColor[task.task_priority as Priority]} h-full w-1 group-hover:w-8 flex flex-col items-center justify-evenly group-hover:opacity-100 transition-all`}>
 
-      {taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=>{console.log("dsaldsa"); setSelectedTaskId(task.id); openModal()}}><IoIosSettings/></button>}
-      {taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=>{e.stopPropagation(); onTaskDelete(e, task.id)}}><RiDeleteBin6Fill/></button>}
+      {myRole !== "member" && taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={()=>{ setSelectedTaskId(task.id); openModal()}}><IoIosSettings/></button>}
+      {myRole !== "member" && taskStyle === TaskStyle.KanbanStyle && <button className='invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=>{e.stopPropagation(); onTaskDelete(e, task.id)}}><RiDeleteBin6Fill/></button>}
 
-      {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onUpdateTaskUpdate(e, task.id, TaskUpdateOption.accept)}}><IoIosCheckmark className=''/></button>}
-      {taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onTaskDelete(e,task.id)}}><IoClose className=' '/></button>}     
+      {myRole !== "member" && taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onUpdateTaskUpdate(e, task.id, TaskUpdateOption.accept)}}><IoIosCheckmark className=''/></button>}
+      {myRole !== "member" && taskStyle === TaskStyle.PendingStyle && <button className=' invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity' onClick={(e)=> {onTaskDelete(e,task.id)}}><IoClose className=' '/></button>}     
 
     </div>
     <div className={`absolute top-0 right-0`}>

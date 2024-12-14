@@ -79,10 +79,15 @@ const queries = {
             GROUP BY p.id, p.name, p.description, p.created_at, p.github_link, p.specifications;
         `,
         getProjectMemberByIdQ:`
-            SELECT pm.project_id, pm.member_id
+            SELECT pm.project_id, pm.member_id, pm.role
             FROM project_members pm
             WHERE pm.project_id = $1 AND pm.member_id = $2;
-        `
+        `,
+        updateProjectMemberRole:`
+            UPDATE project_members
+            SET role = $1
+            WHERE member_id = $2 AND project_id = $3 RETURNING *;
+        `,
     },
     tasks:{
         getTasksQ:`

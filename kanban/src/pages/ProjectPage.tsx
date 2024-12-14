@@ -25,6 +25,7 @@ import { selectedTaskContext } from '../context/selectedTaskContext'
 
 import { useGetAllProjectMembersByProjectId } from '../hooks/QueryHooks'
 import { ProjectMembersProvider } from '../context/ProjectMembersContext'
+import { MemberRoleContext, MemberRoleProvider } from '../context/MemberRoleContext'
 
 enum Content{
 
@@ -41,7 +42,7 @@ type dataObjectType = {
   priority: string,
 }
 function ProjectPage() {
-
+  const [myRole, setMyRole] = useState("")
   const {errorC, setErrorC} = useContext(ErrorContext)
   const [hasAccess, setHasAccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -55,7 +56,11 @@ function ProjectPage() {
   const {data: projectMembers, isError: isErrorProjectMembers, isLoading: isLoadingProjectMembers, error: errorProjectMembers} = useGetAllProjectMembersByProjectId(projectId)
   const {selectedTaskId, setSelectedTaskId, openModal, closeModal, dialogRefUpdate} = useContext(selectedTaskContext)
 
-
+  useEffect(()=> {
+    if (projectMembers){
+      console.log("There is project memebrs and its updating");
+    }
+  }, [projectMembers])
 
 
 
@@ -64,8 +69,9 @@ function ProjectPage() {
       try{
         let result = await axiosInstance.post(`${import.meta.env.VITE_BASE_URL_LINK}/verifyProjectAccess`, {projectId: projectId});
         if(result.status === 200){
-          console.log(result.data.data);
-          setHasAccess(result.data.data)
+          console.log("USE EFFECT"  + result.data.data.role)
+          setMyRole(result.data.data.role);
+          setHasAccess(result.data.data);
         }
 
       }catch(e:unknown){
@@ -255,11 +261,13 @@ function ProjectPage() {
           </div>
           
           <ProjectMembersProvider projectMembers={projectMembers} isErrorProjectMembers={isErrorProjectMembers} isLoadingProjectMembers={isLoadingProjectMembers} errorProjectMembers={errorProjectMembers}> 
+            <MemberRoleProvider myRole={myRole} setMyRole={setMyRole}>
           {content === Content.Main && <ColumnContainer dialogRef={dialogRef}/>}
           {content === Content.People && <People/>}
           {content === Content.Settings && <Settings/>}
           {content === Content.Specifications && <Specifications/>}
           {content === Content.Links && <Links/>}
+            </MemberRoleProvider> 
           </ProjectMembersProvider>
         </div>
 

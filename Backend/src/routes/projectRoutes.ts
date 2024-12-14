@@ -123,6 +123,7 @@ router.post('/createProject', verifySessionToken, async (req,res)=> {
                 }
                 for (let i = 0; i<members.length;i++){
                     try{
+                        console.log("i value =" + members[i]);
                         let resultMembers: pg.QueryResult = await pool.query(queries.project.addProjectMembersByDisplayName, [idR, members[i], 'member'])
                     }catch(e){
                         console.log(e + "BLACKBLACKBALCKBLACK")
@@ -153,6 +154,24 @@ router.post('/addProjectMemberByDisplayName', verifySessionToken, async (req,res
     }
 
 })
+
+router.patch(`/updateProjectMemberRole/:projectId`, async (req,res)=> {
+    const {projectId} = req.params
+    const {role, memberId} = req.body
+    console.log(role, memberId + "role" + "memberId");
+
+    try{
+        let result = await pool.query(queries.project.updateProjectMemberRole, [role, memberId, projectId])
+        if (result.rowCount > 0) {
+            res.status(200).json({data:result.rows, message: "updated a project role", status:"success"});
+        }else{
+            res.status(200).json({data:result.rows, message: "did not update a project role but was successful", status:"success"});
+        }
+    }catch(e){
+        console.log(e)
+        res.status(403).json({error: "cannot update project member role due to errors"})
+    }
+})
 router.post('/verifyProjectAccess', verifySessionToken, async (req,res)=> {
     const {userId} = req
 
@@ -164,7 +183,7 @@ router.post('/verifyProjectAccess', verifySessionToken, async (req,res)=> {
     try{
         let result = await pool.query(queries.project.getProjectMemberByIdQ, [projectId, userId]);
         if(result.rowCount > 0){
-            res.status(200).json({data:result.rows, message: "exists", status:"success"});
+            res.status(200).json({data:result.rows[0], message: "exists", status:"success"});
         }else{
             console.log(result.rows + "dkwoadkawodkwao");
             res.status(200).json({data:null, message: "cannot find member in project", status:"success"})

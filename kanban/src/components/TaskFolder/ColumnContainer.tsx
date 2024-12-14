@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useContext} from 'react'
 import TaskContainer from './TaskContainer'
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { useGetTasks, useGetUserId, useUpdateTaskStatus} from '../../hooks/QueryHooks';
@@ -9,6 +9,7 @@ import LeftPanelNavigation from '../LeftPanelNavigation';
 import { TaskType } from '../../Types/Types';
 import { Sort } from '../../Types/Types';
 import { useSortHook } from '../../hooks/SortHooks';
+import { MemberRoleContext } from '../../context/MemberRoleContext';
 type Column = {
   id: string,
   title: string,
@@ -28,6 +29,7 @@ type ColumnContainerProps = {
 }
 function ColumnContainer({dialogRef}: ColumnContainerProps) {
 
+  const {myRole, setMyRole} = useContext(MemberRoleContext)
 
   const [sort, setSort] = useState<Sort>(Sort.Title)
 
@@ -55,8 +57,6 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
   let sortedNoPendingTasks = sortedTasks.filter((task)=> { return task.task_update !== 'pending'})
 
 
-  console.log("LOG ALL ALL TASKS", allTasks)
-  console.log("LOG ALL my TASKS", myTasks)
   
   useEffect(() => {
     console.log('Sorted tasks have changed:', sortedTasks);
@@ -95,7 +95,7 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
         <div className='flex items-center'>
 
           <div className='flex-1'>
-            <button className=' bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>{dialogRef.current?.showModal()}}><span className='text-xl font-bold'>Add Task</span></button>
+            {myRole === 'leader' && <button className=' bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>{dialogRef.current?.showModal()}}><span className='text-xl font-bold'>Add Task</span></button>}
           </div>
           
           <div className='ml-auto '>
