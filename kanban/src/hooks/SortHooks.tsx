@@ -16,12 +16,17 @@ export const useSortHook = (sort: Sort, tasks: TaskType[]) => {
         })
     }
     if(sort === Sort.Title){
-        return tasks.sort((taskA, taskB)=> {
+        return tasks.concat().sort((taskA, taskB)=> {
             return taskA.task_title.localeCompare(taskB.task_title)
         })
     }
 
-    return tasks
+    return tasks    
+}
 
-    
+export const useSortHookMembers = (members) => {
+    return members.concat().sort((memberA, memberB)=> {
+        console.log(memberA.display_name + memberB.display_name + "DSADSAJIDSAJID")
+        return memberA.display_name.localeCompare(memberB.display_name)
+    })
 }

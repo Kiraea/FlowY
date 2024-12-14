@@ -8,6 +8,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useQueryClient} from '@tanstack/react-query'
 import { MemberRoleContext } from '../../context/MemberRoleContext'
 import { useRef } from 'react'
+import { useSortHookMembers } from '../../hooks/SortHooks'
 
 function PeopleContainer() {
   const dialogRefAddMember = useRef<HTMLDialogElement | null>(null)
@@ -26,6 +27,7 @@ function PeopleContainer() {
   })
 
 
+
   const handleUpdateMemberRole = (memberId: string, role: string)=>{
     updateProjectMemberRoleMutation({projectId, role, memberId})
   }
@@ -38,7 +40,6 @@ function PeopleContainer() {
     onSuccess: () => {
       console.log(projectId)
       queryClient.invalidateQueries({ queryKey: ['projectMembers', projectId] });
-      console.log("QUERY INVALIDATED and REFETCHED");
     }
   })
 
@@ -55,6 +56,8 @@ function PeopleContainer() {
     handleAddMemberMutation({projectId: object.projectId, displayName: object.displayName})
     dialogRefAddMember.current?.close();
   }
+
+  const sortedProjectMembers = useSortHookMembers(projectMembers);
 
   if(isLoadingProjectMembers){
     return <div>isLoading...</div>
@@ -92,7 +95,7 @@ function PeopleContainer() {
         </div>
       </div>
       <div className='bg-primary-bg2 rounded-xl p-5 flex flex-col gap-5 shadow-black shadow-md '>
-        {projectMembers.map((member)=> {
+        {sortedProjectMembers.map((member)=> {
            return  (<PeopleCard key={member.member_id} handleUpdateMemberRole={handleUpdateMemberRole} displayName={member.display_name} memberRole={member.role} memberId={member.member_id} />)
         })}
       </div>
