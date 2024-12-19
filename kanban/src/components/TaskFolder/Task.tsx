@@ -59,7 +59,6 @@ type TaskMember = {
 function Task({task, taskMembers, taskStyle}: TaskProps  ) {
 
   const {myRole, setMyRole} = useContext(MemberRoleContext);
-  console.log(myRole + "myRoletASK");
   const [openMemberList, setOpenMemberList] = useState(false)
   const {setSelectedTaskId, setSelectedPriority, setSelectedTitle, setSelectedStatus, selectedTaskId, openModal} = useContext(selectedTaskContext)
 
@@ -67,7 +66,6 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
 
   const isOpen = task.id === selectedTaskIdAssignment
 
-  console.log (task.id, selectedTaskIdAssignment, isOpen, " DLAPSDLSAPLDSALPDSADA");
 
 
   const params = useParams();
@@ -112,7 +110,6 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
 
     const formData = new FormData(e.currentTarget)
     let membersId  = formData.getAll("membersId") as string[]
-    console.log(membersId, "MEMBERSID SUBMITTASKASSINGMENT")
     const taskId = task.id;
     if (projectId)
     useAddDeleteTaskMemberAssignmentMutation({membersId, projectId, taskId})

@@ -10,6 +10,10 @@ import session from 'express-session'
 import bodyParser from 'body-parser';
 import {router as projectRoutes} from './routes/projectRoutes.js'
 import {router as taskRoutes} from './routes/taskRoutes.js';
+import { Server } from 'socket.io'
+import { createServer } from 'node:http';
+import { Connection } from 'pg';
+
 declare module 'express-session'{
   interface sessionData {
     userSessionObj?: {
@@ -25,6 +29,7 @@ const pgSession = connectpgsimple(session)
 
 
 const app = express()
+
 
 var pool = new Pool({
   database: process.env.DATABASE_NAME,
@@ -77,10 +82,33 @@ app.use('/api', projectRoutes);
 app.get('/', (req, res) => {
   res.send('Hello World')
 })
+const server = createServer(app)
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+})
 
+io.on('connection', (socket)=> {
+  socket.on('joinProject', ({projectId, displayName})=> {
+
+    socket.join(`project_${projectId}`)
+
+    io.to(`project_${projectId}`).emit(`${displayName} has joined this project`)
+    console.log(`${displayName} joined this project ${projectId}`);
+
+  })
+
+  socket.on(`leaveProject`, ({projectId, displayName})=> {
+    console.log(`${displayName} left project:${projectId}`);
+    socket.leave(`project_${projectId}`) // to actually remove the socket from the room
+  })
+})
 
 const run = async () =>{
-    app.listen(process.env.PORT, ()=>{
+    server.listen(process.env.PORT, ()=>{
       console.log(`${process.env.PORT}`)
       try{
         setupDatabase()

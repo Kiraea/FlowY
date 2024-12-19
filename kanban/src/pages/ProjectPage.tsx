@@ -22,8 +22,9 @@ import { useMutation } from '@tanstack/react-query'
 import { useAddTaskFull } from '../hooks/QueryHooks'
 import { useUpdateTaskFull } from '../hooks/QueryHooks'
 import { selectedTaskContext } from '../context/selectedTaskContext'
-
+import { io } from 'socket.io-client'
 import { useGetAllProjectMembersByProjectId } from '../hooks/QueryHooks'
+import { useUserData } from '../hooks/QueryHooks'
 import { MemberRoleContext, MemberRoleProvider } from '../context/MemberRoleContext'
 import WhiteBoard from '../components/content/WhiteBoard'
 
@@ -42,6 +43,10 @@ type dataObjectType = {
   priority: string,
 }
 function ProjectPage() {
+
+  const socket = io(`http://localhost:3001`)
+
+  const {data: myUserData, isLoading: myUserIsLoading, isError: myUserIsError, error: myUserError} = useUserData()
   const [myRole, setMyRole] = useState("")
   const {errorC, setErrorC} = useContext(ErrorContext)
   const [hasAccess, setHasAccess] = useState(false)
@@ -83,8 +88,26 @@ function ProjectPage() {
     getQuery()
   }, [projectId])
 
-  if(isLoading){
+  useEffect(()=> {
+    if (myUserData){
+      socket.emit("joinProject", ({projectId: projectId, displayName: myUserData.displayName}))
+    }
+
+    return () => {
+      if(myUserData){
+        socket.emit('leaveProject', ({projectId: projectId, displayName: myUserData.displayName}))
+        // do not do this this basically means socket would disconnect from the whole server, but we just want
+        // the user to leave the room not disconnect and not connect to other rooms imagine disconnect as disconnecting from all rooms not just 
+        // 1 specific room
+      }
+    }
+  }, [projectId, myUserData])
+
+  if(isLoading || myUserIsLoading){
     <div>is Loading...</div>
+  }
+  if(myUserIsError){
+    return <div>{myUserError.message}</div>
   }
 
   if (!isLoading){
@@ -250,7 +273,7 @@ function ProjectPage() {
           <button className='left-panel-tab w-full p-4 flex-auto bg-primary-bg2 sm:w-1/3' onClick={()=>{setContent(Content.WhiteBoard)}}><FaExternalLinkSquareAlt/><span className='xlreverse:hidden font-bold'>Links</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Specifications)}}><IoDocumentTextSharp/><span className='xlreverse:hidden font-bold'>Specification</span></button>
         </div>
-        <div className='flex flex-1 flex-col xl:items-center gap-5 '>
+        <div className='flex flex-1 flex-col xl:items-center gap-5'>
           <div className='flex w-3/4 mt-2'>
             <Link to="/main" className='flex-1'><IoMdArrowRoundBack className='text-xl relative -left-9 rounded-full text-white mx-10'/></Link>
             <h1 className=' flex-1 text-2xl text-center place-self-center bg-primary-bg1 text-white rounded-3xl font-extralight shadow-black shadow-sm font-extralight '>Home Problems</h1>

@@ -29,7 +29,6 @@ router.get(`/getUserDisplayName`, verifySessionToken, async (req,res)=>{
         try{
             let result = await pool.query(queries.user.getDisplayNameAndId, [userId]);
             if (result.rowCount > 0){
-                console.log("dsad" + result.rows[0].display_name);
                 res.status(200).json({displayName: result.rows[0].display_name, userId: result.rows[0].id})
             }
         }catch(e){
@@ -43,7 +42,7 @@ router.get(`/getUserDisplayName`, verifySessionToken, async (req,res)=>{
 
 router.post('/login', async (req,res)=>{
     const {username, password} = req.body
-    console.log(username, password)
+    //console.log(username, password)
     const user: UserType = await checkIfValid(username)
     if(user){
 
@@ -61,11 +60,11 @@ router.post('/login', async (req,res)=>{
 })
 
 router.post('/register', async (req,res)=>{
-        console.log('Request headers:', req.headers);
-    console.log('Request body:', req.body);
+        //console.log('Request headers:', req.headers);
+    //console.log('Request body:', req.body);
     const {username, password, display_name} = req.body
 
-    console.log(username, password, display_name);
+    //console.log(username, password, display_name);
     let newUser: string;
     let user: UserType = await checkIfValid(username)
     if (!user){
