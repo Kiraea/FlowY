@@ -12,6 +12,7 @@ export default {
           contrast: '#f0abfc',
           bg1: '#1e2124',
           bg3: '#424549',
+          bg4: '#4e5156',
           bg0: '#131517',
           bg05: '#121415',
         },
