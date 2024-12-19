@@ -33,6 +33,7 @@ function CreateProjectPage() {
   const [projectLink, setProjectLink] = useState('')
   const [memberName, setMemberName] = useState('')
   const [memberList, setMemberList] = useState<string[]>([])
+
   const addMember = (e: React.FormEvent<HTMLButtonElement>)=>{
     e.preventDefault()
     setMemberList((prev)=>{
@@ -45,6 +46,24 @@ function CreateProjectPage() {
       return member.toLowerCase() !== (memberName.toLowerCase())
     }))
   }
+  const queryClient = useQueryClient()
+  const {mutateAsync:  createProjectMutation } = useMutation({
+    mutationFn: async (projectDetails)=> {
+      try{
+        let result = await axiosInstance.post(`${import.meta.env.VITE_BASE_URL_LINK}/createProject`,{projectDetails})
+        if(result.status === 200){
+          console.log(result.data.message);
+          console.log(result.data.data);
+          navigate(`/main`);
+      }
+      }catch(e: unknown){
+          if (e instanceof AxiosError){
+            setErrorC(e.response?.data.error);
+        }
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({queryKey: ['projects']})
+  })
   const submitProjectDetails = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     let isError = false;
@@ -62,19 +81,8 @@ function CreateProjectPage() {
       isError=true;
       setErrorC("Fields are incomplete, Please try again");
     }
-    if (!isError){
-      try{
-        let result = await axiosInstance.post(`${import.meta.env.VITE_BASE_URL_LINK}/createProject`,{projectDetails})
-        if(result.status === 200){
-          console.log(result.data.message);
-          console.log(result.data.data);
-          navigate(`/main`);
-      }
-      }catch(e: unknown){
-          if (e instanceof AxiosError){
-            setErrorC(e.response?.data.error);
-        }
-      }
+    if (!isError && projectDetails){
+        createProjectMutation(projectDetails)
 
     }
   }

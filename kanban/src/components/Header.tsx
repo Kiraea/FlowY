@@ -18,11 +18,11 @@ function Header() {
     <div className='flex justify-between items-center bg-primary-bg0 p-5 w-full'>
         <div className='flex items-center'>
             <div className='font-Inter text-primary-white font-bold text-5xl'>FlowY</div>
-            <GiCrossedAirFlows className='size-8 text-primary-highlight2'/>
+            <GiCrossedAirFlows className='size-8 text-green-500'/>
         </div>
         <div className='flex flex-col items-center'>
             <FaUser className='size-8'/>
-            <div className='text-center'>Welcome {data.displayName}</div>
+            <div className='text-center'>Welcome <span className='text-red-300'>{data.displayName}</span></div>
         </div>
     </div>
   )

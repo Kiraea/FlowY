@@ -65,7 +65,9 @@ const queries = {
         `,
         getProjectByUserIdQ: `
             SELECT p.id, p.name, p.description, TO_CHAR(p.created_at, 'YYYY Month DD') as created_at_formatted, p.github_link, p.specifications, 
-                COUNT(pm.member_id) as member_count
+            (SELECT COUNT(DISTINCT pm2.member_id)
+            FROM project_members pm2
+            WHERE pm2.project_id = p.id) as member_count
             FROM projects p 
             JOIN project_members pm ON p.id = pm.project_id
             WHERE pm.member_id = $1
