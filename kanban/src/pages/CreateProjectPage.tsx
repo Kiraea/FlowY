@@ -88,13 +88,13 @@ function CreateProjectPage() {
   }
 
   return (
-    <div className='text-white flex bg-primary-bg0 min-h-screen items-center  flex-col gap-y-5'>
+    <div className='text-white flex bg-primary-bg0 min-h-screen items-center  flex-col gap-y-16'>
 
         <Header/>
         <div className=''>
         </div>
         <form className=' bg-primary-bg1 p-5 flex flex-col gap-5 rounded-xl relative'>
-              <Link to='/main'><button className='absolute -top-10 left-0 bg-primary-highlight2 text-black rounded-3xl p-1'><MdKeyboardDoubleArrowLeft/></button></Link>
+              <Link to='/main'><button className='absolute -top-10 left-0 bg-red-400 text-black rounded-3xl p-1'><MdKeyboardDoubleArrowLeft/></button></Link>
             <div className='flex flex-col'>
               <label>Project Name</label>
               <input type='text' required name='projectName' value={projectName} onChange={(e)=>{setProjectName(e.target.value)}} className='input-types p-0'/>
@@ -126,7 +126,7 @@ function CreateProjectPage() {
                 )
               })}
             </ul>
-            <button onClick={submitProjectDetails} className='bg-primary-highlight2 w-fit rounded-xl p-1 text-black'>Submit</button>
+            <button onClick={submitProjectDetails} className='bg-red-400 w-fit rounded-xl p-1 text-black'>Submit</button>
         </form>
         <ErrorComponent errorC={errorC}/>
     </div>

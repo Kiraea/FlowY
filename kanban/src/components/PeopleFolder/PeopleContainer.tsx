@@ -17,7 +17,7 @@ function PeopleContainer() {
   const projectId = params.projectId || "";
 
   const queryClient = useQueryClient()
-  const {isError: isErrorProjectMembers, isLoading: isLoadingProjectMembers, error: errorProjectMembers, data: projectMembers} = useGetAllProjectMembersByProjectId(projectId) 
+  const {isError: isErrorProjectMembers, isLoading: isLoadingProjectMembers, error: errorProjectMembers, data: projectMembers = []} = useGetAllProjectMembersByProjectId(projectId) 
 
 
 
