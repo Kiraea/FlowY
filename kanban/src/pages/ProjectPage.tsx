@@ -6,7 +6,7 @@ import { ErrorComponent, ErrorContext } from '../context/ErrorContext'
 import { Axios, AxiosError } from 'axios'
 import Settings from '../components/content/Settings'
 import Specifications from '../components/content/Specifications'
-import Links from '../components/content/Links'
+import Links from '../components/content/WhiteBoard'
 import People from '../components/content/People'
 import ColumnContainer from '../components/TaskFolder/ColumnContainer'
 import { TfiControlBackward } from "react-icons/tfi";
@@ -25,13 +25,14 @@ import { selectedTaskContext } from '../context/selectedTaskContext'
 
 import { useGetAllProjectMembersByProjectId } from '../hooks/QueryHooks'
 import { MemberRoleContext, MemberRoleProvider } from '../context/MemberRoleContext'
+import WhiteBoard from '../components/content/WhiteBoard'
 
 enum Content{
 
   Main = 'Main',
   People = 'People',
   Settings = 'Settings',
-  Links = 'Links',
+  WhiteBoard = 'WhiteBoard',
   Specifications = 'Specifications'
 }
 type dataObjectType = {
@@ -246,7 +247,7 @@ function ProjectPage() {
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Main)}}><GrProjects/><span className='xlreverse:hidden font-bold'>Project</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto bg-primary-bg2 sm:w-1/3' onClick={()=>{setContent(Content.People)}}><IoPeopleSharp/><span className='xlreverse:hidden font-bold'>Members</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Settings)}}><IoSettingsSharp/><span className='xlreverse:hidden font-bold'>Settings</span></button>
-          <button className='left-panel-tab w-full p-4 flex-auto bg-primary-bg2 sm:w-1/3' onClick={()=>{setContent(Content.Links)}}><FaExternalLinkSquareAlt/><span className='xlreverse:hidden font-bold'>Links</span></button>
+          <button className='left-panel-tab w-full p-4 flex-auto bg-primary-bg2 sm:w-1/3' onClick={()=>{setContent(Content.WhiteBoard)}}><FaExternalLinkSquareAlt/><span className='xlreverse:hidden font-bold'>Links</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Specifications)}}><IoDocumentTextSharp/><span className='xlreverse:hidden font-bold'>Specification</span></button>
         </div>
         <div className='flex flex-1 flex-col xl:items-center gap-5 '>
@@ -261,7 +262,7 @@ function ProjectPage() {
           {content === Content.People && <People/>}
           {content === Content.Settings && <Settings/>}
           {content === Content.Specifications && <Specifications/>}
-          {content === Content.Links && <Links/>}
+          {content === Content.WhiteBoard && <WhiteBoard/>}
             </MemberRoleProvider> 
         </div>
 

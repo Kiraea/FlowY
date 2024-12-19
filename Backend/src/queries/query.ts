@@ -151,6 +151,14 @@ const queries = {
             FROM tasks t JOIN task_members tm
                         ON t.id = tm.task_id
             WHERE t.project_id = $1 AND tm.task_user_id = $2
+        `,
+        deleteAllTaskMembersQ:`
+            DELETE FROM task_members 
+            where task_id = $1 RETURNING *;
+        `,
+        addAllTaskMembersQ:`
+            INSERT INTO task_members (task_user_id, project_id, task_id)
+            VALUES ($1, $2, $3) RETURNING *;
         `
 
     }

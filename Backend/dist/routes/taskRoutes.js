@@ -180,5 +180,45 @@ router.patch(`/updateTaskStatus`, async (req, res) => {
         res.status(403).json({ error: "does not work" });
     }
 });
+router.put(`/deleteAndAddTaskMembers/:projectId/:taskId`, async (req, res) => {
+    const { membersId } = req.body;
+    const { projectId, taskId } = req.params;
+    if (!membersId) {
+        res.status(403).json({ error: "no memebers" });
+    }
+    let searchValues = "";
+    membersId.forEach((member, index) => {
+        if (index < membersId.length - 1) {
+            searchValues += `('${member}', '${projectId}', '${taskId}'), `;
+        }
+        else {
+            searchValues += `('${member}', '${projectId}', '${taskId}')`;
+        }
+    });
+    console.log("SEARCH FALVAUESUESUAIEUA", searchValues);
+    console.log("TASKIDIDID", "PROJECTIDAJSIDSJAIDJAS", taskId, projectId);
+    try {
+        let result = await pool.query(queries.tasks.deleteAllTaskMembersQ, [taskId]);
+        if (membersId.length > 0) {
+            let customQuery = `INSERT INTO task_members (task_user_id, project_id, task_id) VALUES ${searchValues} RETURNING *;`;
+            try {
+                let result2 = await pool.query(customQuery);
+                if (result2.rowCount > 0) {
+                    res.status(200).json({ data: result2.rows, message: "succesfully deleted and added", status: "success" });
+                }
+            }
+            catch (e) {
+                console.log(e);
+            }
+        }
+        else {
+            res.status(200).json({ data: result.rows, message: "succesfully deleted will not add anymore due to members empty", status: "success" });
+        }
+    }
+    catch (e) {
+        console.log(e);
+        res.status(401).json({ error: "does not work" });
+    }
+});
 export { router };
 //# sourceMappingURL=taskRoutes.js.map

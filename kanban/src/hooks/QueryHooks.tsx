@@ -199,6 +199,20 @@ export const useUpdateProjectMemberRole = async ({projectId, role, memberId}: {p
     }
 }
 
+export const useAddDeleteTaskMemberAssignment = async( {membersId, projectId, taskId}: {membersId: string[], projectId: string, taskId: string}) => {
+    try{
+        let result = await axiosInstance.put(`${import.meta.env.VITE_BASE_URL_LINK}/deleteAndAddTaskMembers/${projectId}/${taskId}`, {membersId})
+        if (result.status === 200) {
+            console.log(result.data.data)
+            return result.data.data
+        }
+    }catch(e: unknown){
+        if (e instanceof AxiosError){
+            console.log(e);
+        }
+    }
+
+}
 
 export const useAddProjectMember = async ({projectId, displayName} : {projectId: string, displayName: string}) => {
     try{

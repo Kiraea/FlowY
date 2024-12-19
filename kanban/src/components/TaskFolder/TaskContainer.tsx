@@ -24,7 +24,6 @@ type TaskMember = {
 
 function TaskContainer({columnId, columnTitle, tasks, taskMembers}: TaskDetailsProps) {
 
-
   const {setNodeRef} = useDroppable({
     id: columnId,
   })
@@ -33,7 +32,7 @@ function TaskContainer({columnId, columnTitle, tasks, taskMembers}: TaskDetailsP
       <div className='font-semibold text-xl mb-2'>{columnTitle}</div>
     <div className='flex flex-col bg-primary-bg2 h-full p-2 shadow-black shadow-md gap-2' ref={setNodeRef}>
         {tasks.map((task)=>  {
-          return (<Task task={task} key={task.id} taskStyle={TaskStyle.KanbanStyle} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
+          return (<Task  task={task} key={task.id} taskStyle={TaskStyle.KanbanStyle} taskMembers={taskMembers.filter((member)=> member.task_id === task.id)}/>)
         })}
       </div>
     </div>

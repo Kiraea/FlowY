@@ -10,6 +10,7 @@ import { TaskType } from '../../Types/Types';
 import { Sort } from '../../Types/Types';
 import { useSortHook } from '../../hooks/SortHooks';
 import { MemberRoleContext } from '../../context/MemberRoleContext';
+import { SelectedTaskAssignmentContextProvider } from '../../context/selectedTaskAssignmentContext';
 type Column = {
   id: string,
   title: string,
@@ -29,6 +30,7 @@ type ColumnContainerProps = {
 }
 function ColumnContainer({dialogRef}: ColumnContainerProps) {
 
+
   const {myRole, setMyRole} = useContext(MemberRoleContext)
 
   const [sort, setSort] = useState<Sort>(Sort.Title)
@@ -44,7 +46,6 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
 
 
   const {isLoading: taskMembersLoading, isError: taskMembersIsError, error: taskMembersError, data: taskMembers = []} = useGetAllTaskMembersByProjectId(projectId);
-  //console.log("column coantainer", taskMembers);
 
   const userId =  useGetUserId() // async axios btw
 
@@ -107,11 +108,13 @@ function ColumnContainer({dialogRef}: ColumnContainerProps) {
 
         </div>
         <div className='grid grid-cols-4 gap-5 lg:grid-cols-2 md:grid-cols-1'>
+          <SelectedTaskAssignmentContextProvider>
           <DndContext onDragEnd={handleDragEnd}>
             {COLUMNS.map((obj)=>{
               return (<TaskContainer columnId={obj.id} columnTitle={obj.title} key={obj.id} tasks={sortedNoPendingTasks?.filter((task)=> task.task_status=== obj.id) || []} taskMembers={taskMembers.length > 0 ? taskMembers : [] }/>)
             })}
           </DndContext>
+          </SelectedTaskAssignmentContextProvider>
         </div>
       </div>
 

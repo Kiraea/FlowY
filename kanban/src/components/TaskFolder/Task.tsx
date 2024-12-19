@@ -6,7 +6,7 @@ import { GrStatusCriticalSmall } from "react-icons/gr";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import { IoIosSettings } from "react-icons/io";
-import { useDeleteTask, useGetAllProjectMembersByProjectId, useUpdateTaskFull, useUpdateTaskStatus, useUpdateTaskUpdate } from '../../hooks/QueryHooks';
+import { useAddDeleteTaskMemberAssignment, useDeleteTask, useGetAllProjectMembersByProjectId, useUpdateTaskFull, useUpdateTaskStatus, useUpdateTaskUpdate } from '../../hooks/QueryHooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import {useContext } from 'react'
@@ -17,6 +17,7 @@ import { IoIosCheckmark } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
 import { IoIosAddCircle } from "react-icons/io"; 
 import { ProjectMembersContext } from '../../context/ProjectMembersContext';
+import { HiOutlineSquare3Stack3D } from "react-icons/hi2";
 type TaskProps= {
     task: TaskType
     taskMembers: TaskMember[],
@@ -25,6 +26,7 @@ type TaskProps= {
 }
 import { MdAddReaction } from "react-icons/md";
 import { MemberRoleContext } from '../../context/MemberRoleContext';
+import { SelectedTaskAssignmentContext } from '../../context/selectedTaskAssignmentContext';
 
 enum Priority {
     high = 'high',
@@ -41,7 +43,11 @@ const statusColorText = {
     medium: 'text-yellow-500',
     high: 'text-red-500'
 }
-
+const statusColorBorder = {
+    low: 'border-green-500',
+    medium: 'border-yellow-500',
+    high: 'border-red-500'
+}
 type TaskMember = {
   display_name: string,
   id: string,
@@ -56,6 +62,12 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
   console.log(myRole + "myRoletASK");
   const [openMemberList, setOpenMemberList] = useState(false)
   const {setSelectedTaskId, setSelectedPriority, setSelectedTitle, setSelectedStatus, selectedTaskId, openModal} = useContext(selectedTaskContext)
+
+  const {selectedTaskIdAssignment, togglePopup} = useContext(SelectedTaskAssignmentContext)
+
+  const isOpen = task.id === selectedTaskIdAssignment
+
+  console.log (task.id, selectedTaskIdAssignment, isOpen, " DLAPSDLSAPLDSALPDSADA");
 
 
   const params = useParams();
@@ -91,6 +103,21 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
     updateTaskUpdateMutation({taskId, taskUpdateOption})
   }
 
+    const {mutateAsync: useAddDeleteTaskMemberAssignmentMutation} = useMutation({
+    mutationFn: useAddDeleteTaskMemberAssignment,
+    onSuccess: ()=> {queryClient.invalidateQueries({queryKey: ['taskMembers', projectId]})}
+  })
+  const handleSubmitTaskAssignment = (e:React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const formData = new FormData(e.currentTarget)
+    let membersId  = formData.getAll("membersId") as string[]
+    console.log(membersId, "MEMBERSID SUBMITTASKASSINGMENT")
+    const taskId = task.id;
+    if (projectId)
+    useAddDeleteTaskMemberAssignmentMutation({membersId, projectId, taskId})
+    togglePopup(taskId);
+  }
 
 
   return (
@@ -118,18 +145,22 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
 
     </div>
     <div className={`absolute top-0 right-0`}>
-      <button className="z-30" onMouseEnter={()=>{setOpenMemberList(true)}} onMouseLeave={()=>{setOpenMemberList(false)}}> <MdAddReaction className="relative"/></button>
-      {openMemberList &&
-      
-      <div className='absolute top-0 -right-36 bg-primary-bg1 border-2 border-primary-highlight2 z-10'>
+      <button className="z-30" onClick={()=>{togglePopup(task.id)}}> <HiOutlineSquare3Stack3D className="relative"/></button>
+      {isOpen &&
+      <form onMouseLeave={()=>togglePopup(task.id)} onSubmit={handleSubmitTaskAssignment} className={`min-w-60 absolute flex flex-col p-5 top-0 -right-72 bg-primary-bg1 border-2 ${statusColorBorder[task.task_priority as Priority]}  z-10`}>
+        <label className='text-xl font-bold '>Assign Task</label>
         {projectMembers.length > 0 && projectMembers.map((member)=> {
           return (
-          <div key={member.id} className='flex p-5 gap-5' onMouseEnter={()=>{setOpenMemberList(true)}} onMouseLeave={()=>{setOpenMemberList(false)}}>
-            <input type='checkbox'/>
+          <div key={member.id} className='flex p-5 gap-5'>
+            <input type='checkbox' name='membersId' value={member.member_id}/>
             <label>{member.display_name}</label>
           </div>)
         })}
-      </div>
+        <div className='min-w-full flex gap-5'>
+          <button type='submit' className='flex-1 bg-primary-bg1 rounded-lg p-2 hover:bg-primary-bg2 shadow-black shadow-sm'>Update</button>
+          <button className=' flex-1 bg-primary-bg1 rounded-lg p-2 hover:bg-primary-bg2 shadow-black shadow-sm' onClick={()=>{togglePopup(task.id)}}>X</button>
+        </div>
+      </form>
       }
     </div>
   </div>
