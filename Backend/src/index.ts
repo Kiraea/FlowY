@@ -75,7 +75,7 @@ app.use(session({
 }))
 
 
-
+let i = 0
 app.use('/api', userRoutes);
 app.use('/api', taskRoutes);
 app.use('/api', projectRoutes);
@@ -88,7 +88,8 @@ const io = new Server(server, {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true
-  }
+  },
+  maxHttpBufferSize: 1e8
 })
 
 io.on('connection', (socket)=> {
@@ -100,19 +101,32 @@ io.on('connection', (socket)=> {
     console.log(`${displayName} joined this project ${projectId}`);
 
   })
+  // Example: Handling errors globally
+  socket.on('error', (err) => {
+    console.error('Socket error:', err);
+  });
+  socket.on(`draw`, ({projectId, drawingData}) => {
+    try{
+      const roomName = `project_${projectId}`;
+      console.log("IS DRAWING");
+      console.log(i)
+      i++;
+      //console.log(drawingData.width , drawingData.height, drawingArray, "drawing data");
 
-  socket.on(`draw`, ({projectId, drawData}) => {
-    const roomName = `project_${projectId}`;
-    socket.to(roomName).emit('draw', drawData); // Broadcast to others in the room 
+      io.to(`project_${projectId}`).emit('receiveIncomingDrawings', {...drawingData})
+    }catch(err){
+      console.log(err);
+    }
+
   })
 
-  
 
   socket.on(`leaveProject`, ({projectId, displayName})=> {
     console.log(`${displayName} left project:${projectId}`);
     socket.leave(`project_${projectId}`) // to actually remove the socket from the room
   })
 })
+
 
 const run = async () =>{
     server.listen(process.env.PORT, ()=>{

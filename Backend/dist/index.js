@@ -53,6 +53,7 @@ app.use(session({
         maxAge: 60000 * 60,
     }
 }));
+let i = 0;
 app.use('/api', userRoutes);
 app.use('/api', taskRoutes);
 app.use('/api', projectRoutes);
@@ -65,7 +66,8 @@ const io = new Server(server, {
         origin: "http://localhost:5173",
         methods: ["GET", "POST"],
         credentials: true
-    }
+    },
+    maxHttpBufferSize: 1e8
 });
 io.on('connection', (socket) => {
     socket.on('joinProject', ({ projectId, displayName }) => {
@@ -73,9 +75,22 @@ io.on('connection', (socket) => {
         io.to(`project_${projectId}`).emit(`${displayName} has joined this project`);
         console.log(`${displayName} joined this project ${projectId}`);
     });
-    socket.on(`draw`, ({ projectId, drawData }) => {
-        const roomName = `project_${projectId}`;
-        socket.to(roomName).emit('draw', drawData); // Broadcast to others in the room 
+    // Example: Handling errors globally
+    socket.on('error', (err) => {
+        console.error('Socket error:', err);
+    });
+    socket.on(`draw`, ({ projectId, drawingData }) => {
+        try {
+            const roomName = `project_${projectId}`;
+            console.log("IS DRAWING");
+            console.log(i);
+            i++;
+            //console.log(drawingData.width , drawingData.height, drawingArray, "drawing data");
+            io.to(`project_${projectId}`).emit('receiveIncomingDrawings', { ...drawingData });
+        }
+        catch (err) {
+            console.log(err);
+        }
     });
     socket.on(`leaveProject`, ({ projectId, displayName }) => {
         console.log(`${displayName} left project:${projectId}`);

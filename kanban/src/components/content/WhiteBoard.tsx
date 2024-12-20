@@ -7,6 +7,7 @@ import { IoText } from "react-icons/io5";
 import { IoIosUndo } from "react-icons/io";
 import { FaCheck } from "react-icons/fa";
 import { useUserData } from '../../hooks/QueryHooks';
+import { io } from 'socket.io-client';
 
 
 enum OptionType {
@@ -35,32 +36,41 @@ function WhiteBoard() {
   const params = useParams();
   const projectId = params.projectId || '';
   console.log(optionType, " OPTION TYPE");
-  useEffect(()=> {
-    let canvas: HTMLCanvasElement | null = canvasRef.current
-    if (canvas){
-
-      canvas.width = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
-
-      const context = canvas.getContext("2d")
-      if (context){
-        context.lineCap = "round"
-        context.lineWidth = 15
-        context.strokeStyle = color
-
-
-        context.fillStyle = "#ff0000";
-        contextRef.current = context
-
-
-
-        drawingHistory?.forEach((imageData) => {
-            contextRef.current?.putImageData(imageData,0,0)
-        })
-
-      } 
-    }
-  }, [drawingHistory, color, optionType])
+  useEffect(() => {
+    const handleResize = () => {
+      let canvas: HTMLCanvasElement | null = canvasRef.current;
+      if (canvas) {
+        canvas.width = canvas.offsetWidth;  // Dynamically set width based on container
+        canvas.height = canvas.offsetHeight; // Dynamically set height based on container
+  
+        // Redraw the content after resizing
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (context) {
+          context.lineCap = "round";
+          context.lineWidth = 15;
+          context.strokeStyle = color;
+          context.fillStyle = "#ff0000";
+          contextRef.current = context;
+  
+          // Reapply the drawing history
+          drawingHistory?.forEach((imageData) => {
+            contextRef.current?.putImageData(imageData, 0, 0);
+          });
+        }
+      }
+    };
+  
+    // Initial resize
+    handleResize();
+  
+    // Add the event listener for window resize
+    window.addEventListener("resize", handleResize);
+  
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [drawingHistory, color, optionType]);
 
   useEffect(()=> {
       if(OptionType.TEXT === optionType){
@@ -85,9 +95,38 @@ function WhiteBoard() {
     if (myUserData){
       socket.emit("joinProject", ({projectId: projectId, displayName: myUserData.displayName}))
     }
+    /*
+    socket.on("getDrawingHistory", (drawingHistory)=> { // SHOULD THIS BE ARRAY?
+      setDrawingHistory(drawingHistory)
+    })
+    */
+    const receiveDrawingListener = (drawingData) => {
+      if (contextRef.current) {
+        const { data, width, height } = drawingData;
+    
+        // Ensure the data is a typed array (Uint8ClampedArray)
+        const clampedData = new Uint8ClampedArray(data);
+    
+        // Ensure the data length is width * height * 4
+        if (clampedData.length === width * height * 4) {
+          const imageData = new ImageData(clampedData, width, height);
+          setDrawingHistory((prev) => [...prev, imageData]);
+        } else {
+          console.error("Error in drawing data length:", {
+            expectedLength: width * height * 4,
+            actualLength: clampedData.length,
+            width,
+            height,
+            data: clampedData
+          });
+        }
+      }
+    } 
+    socket.on("receiveIncomingDrawings", receiveDrawingListener);
 
     return () => {
       if(myUserData){
+        socket.off("receiveIncomingDrawings", receiveDrawingListener)
         socket.emit('leaveProject', ({projectId: projectId, displayName: myUserData.displayName}))
         // do not do this this basically means socket would disconnect from the whole server, but we just want
         // the user to leave the room not disconnect and not connect to other rooms imagine disconnect as disconnecting from all rooms not just 
@@ -97,7 +136,7 @@ function WhiteBoard() {
   }, [projectId, myUserData])
 
 
-  
+
   const mouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if(OptionType.ERASE === optionType|| OptionType.DRAW === optionType){
       const {offsetX, offsetY} = e.nativeEvent as MouseEvent
@@ -125,15 +164,22 @@ function WhiteBoard() {
 
 
   const mouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-
     if ((OptionType.DRAW === optionType || OptionType.ERASE === optionType) && canvasRef.current){
       setIsDrawing(false)
       contextRef.current?.closePath()
       e.nativeEvent.preventDefault()
       const imageData = contextRef.current?.getImageData(0,0, canvasRef.current.width , canvasRef.current.height)
       if(imageData){
-        setDrawingHistory((prev)=> [...prev, imageData])
+
+        console.log(imageData)
+        if (socket.connected) {
+          socket.emit('draw', { projectId: projectId, drawingData: { data: imageData.data, height: imageData.height, width: imageData.width } }, (response) => {
+          });
+        } else {
+          console.error('Socket is not connected');
         }
+        setDrawingHistory((prev)=> [...prev, imageData])
+      }
     }
   }
   const undo =  () => {
@@ -185,19 +231,16 @@ function WhiteBoard() {
   }
 
   const addText= (e: React.MouseEvent<HTMLButtonElement>) => {
-
     e.nativeEvent.preventDefault()
     if (OptionType.TEXT === optionType && canvasRef.current){
       const imageData = contextRef.current?.getImageData(0,0, canvasRef.current.width , canvasRef.current.height)
-
       if(imageData){
+        socket.emit('draw', {projectId: projectId, drawingData:{data: imageData.data, height: imageData.height, width: imageData.width}})
+        console.log('Emitting draw data:', projectId, "dksaodkasodkoaskdoaskdoaskdoasLOLOLOLOLO");
         setDrawingHistory((prev)=> [...prev, imageData])
       }
     }
-
   }
-
-
 
   return (
       <div className='w-full h-full bg-transparent flex flex-col p-5 ' >
