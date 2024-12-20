@@ -27,6 +27,6 @@ export const useSortHook = (sort: Sort, tasks: TaskType[]) => {
 export const useSortHookMembers = (members) => {
     return members.concat().sort((memberA, memberB)=> {
         console.log(memberA.display_name + memberB.display_name + "DSADSAJIDSAJID")
-        return memberA.display_name.localeCompare(memberB.display_name)
+        return memberB.display_name.localeCompare(memberA.display_name)
     })
 }

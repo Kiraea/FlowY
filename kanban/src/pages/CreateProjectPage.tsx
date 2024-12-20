@@ -12,7 +12,6 @@ import { useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../axios/axios';
 import {ErrorContext, ErrorComponent} from '../context/ErrorContext';
 import { useMutation } from '@tanstack/react-query';
-import { QueryClient } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query';
 type ProjectDetailsType = {
   name: string,
@@ -48,7 +47,7 @@ function CreateProjectPage() {
   }
   const queryClient = useQueryClient()
   const {mutateAsync:  createProjectMutation } = useMutation({
-    mutationFn: async (projectDetails)=> {
+    mutationFn: async (projectDetails: ProjectDetailsType)=> {
       try{
         let result = await axiosInstance.post(`${import.meta.env.VITE_BASE_URL_LINK}/createProject`,{projectDetails})
         if(result.status === 200){

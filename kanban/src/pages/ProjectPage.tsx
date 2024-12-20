@@ -44,9 +44,8 @@ type dataObjectType = {
 }
 function ProjectPage() {
 
-  const socket = io(`http://localhost:3001`)
 
-  const {data: myUserData, isLoading: myUserIsLoading, isError: myUserIsError, error: myUserError} = useUserData()
+
   const [myRole, setMyRole] = useState("")
   const {errorC, setErrorC} = useContext(ErrorContext)
   const [hasAccess, setHasAccess] = useState(false)
@@ -88,27 +87,12 @@ function ProjectPage() {
     getQuery()
   }, [projectId])
 
-  useEffect(()=> {
-    if (myUserData){
-      socket.emit("joinProject", ({projectId: projectId, displayName: myUserData.displayName}))
-    }
 
-    return () => {
-      if(myUserData){
-        socket.emit('leaveProject', ({projectId: projectId, displayName: myUserData.displayName}))
-        // do not do this this basically means socket would disconnect from the whole server, but we just want
-        // the user to leave the room not disconnect and not connect to other rooms imagine disconnect as disconnecting from all rooms not just 
-        // 1 specific room
-      }
-    }
-  }, [projectId, myUserData])
 
-  if(isLoading || myUserIsLoading){
+  if(isLoading){
     <div>is Loading...</div>
   }
-  if(myUserIsError){
-    return <div>{myUserError.message}</div>
-  }
+
 
   if (!isLoading){
     if(!hasAccess){

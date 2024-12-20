@@ -7,6 +7,23 @@ type PeopleCardProps = {
     memberRole: string;
     handleUpdateMemberRole: (memberId: string, role: string) => void
 }
+
+
+enum RoleEnum {
+    MEMBER = "member",
+    LEADER = "leader",
+    ADMIN = "admin"
+}
+
+const roleColor = {
+    member: "yellow-500",
+    leader: "red-500",
+    admin: "blue-500"
+}
+
+
+
+
 function PeopleCard({displayName, memberId, memberRole, handleUpdateMemberRole}: PeopleCardProps) {
     const {myRole, setMyRole} = useContext(MemberRoleContext)
 
@@ -20,9 +37,9 @@ function PeopleCard({displayName, memberId, memberRole, handleUpdateMemberRole}:
     console.log(myRole + " PEOPLE CARD");
   return (
     <>
-        <div className=' p-20 grid grid-cols-3 text-xl rounded-xl font-bold bg-primary-bg1 shadow-md shadow-black hover:bg-primary-bg2'>
+        <div className=' p-10 grid grid-cols-3 text-xl rounded-xl font-bold bg-primary-bg1 shadow-md shadow-black hover:bg-primary-bg2'>
             <span className=''>{displayName} </span>
-            <span className=''>{role}</span>
+            <span className={`text-${roleColor[role as keyof typeof roleColor]}`}>{role}</span>
             {role && role !== 'leader' && myRole !== 'member' &&  
                 <select name='roles' value={role} onChange={handleChange} className='text-white bg-primary-bg2 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm'>
                     <option value='member'>Member (View Only)</option>

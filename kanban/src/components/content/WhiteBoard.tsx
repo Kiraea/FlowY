@@ -1,10 +1,12 @@
 import e from 'express';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom';
 import { FaEraser } from "react-icons/fa";
 import { FaPencilAlt } from "react-icons/fa";
 import { IoText } from "react-icons/io5";
 import { IoIosUndo } from "react-icons/io";
 import { FaCheck } from "react-icons/fa";
+import { useUserData } from '../../hooks/QueryHooks';
 
 
 enum OptionType {
@@ -14,6 +16,11 @@ enum OptionType {
 }
 
 function WhiteBoard() {
+
+  const socket = io(`http://localhost:3001`)
+
+
+  const {data: myUserData, isLoading: myUserIsLoading, isError: myUserIsError, error: myUserError} = useUserData()
   const [isDrawing, setIsDrawing] = useState(false)
   const [drawingHistory, setDrawingHistory] = useState<ImageData[]>([])
   const [optionType, setOptionType] = useState(OptionType.DRAW)
@@ -25,7 +32,8 @@ function WhiteBoard() {
   const contextRef = useRef<CanvasRenderingContext2D | null>(null)
 
   const [userInput, setUserInput] = useState("")
-
+  const params = useParams();
+  const projectId = params.projectId || '';
   console.log(optionType, " OPTION TYPE");
   useEffect(()=> {
     let canvas: HTMLCanvasElement | null = canvasRef.current
@@ -72,6 +80,23 @@ function WhiteBoard() {
       }
     }
   }, [optionType])
+ 
+  useEffect(()=> {
+    if (myUserData){
+      socket.emit("joinProject", ({projectId: projectId, displayName: myUserData.displayName}))
+    }
+
+    return () => {
+      if(myUserData){
+        socket.emit('leaveProject', ({projectId: projectId, displayName: myUserData.displayName}))
+        // do not do this this basically means socket would disconnect from the whole server, but we just want
+        // the user to leave the room not disconnect and not connect to other rooms imagine disconnect as disconnecting from all rooms not just 
+        // 1 specific room
+      }
+    }
+  }, [projectId, myUserData])
+
+
   
   const mouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if(OptionType.ERASE === optionType|| OptionType.DRAW === optionType){

@@ -22,9 +22,9 @@ function Project({project}: ProjectProps) {
 
   console.log(project);
   return (
-    <div className='flex flex-col items-start bg-primary-bg1 p-2 gap-5 relative h-full hover:bg-primary-bg2 shadow-black shadow-md'>
+    <div className='flex flex-col items-start bg-primary-bg1 p-2 gap-5 relative h-full hover:bg-primary-bg2 shadow-black shadow-sm'>
         <div className='flex flex-col items-start basis-10/12 gap-5' >
-          <h1 className='font-bold bg-primary-bg3 p-1 rounded'>{project.name}</h1>
+          <h1 className='font-bold bg-primary-bg3 p-1 rounded shadow-sm shadow-black'>{project.name}</h1>
           <h2 className='' >{truncated}</h2>
         </div>
 

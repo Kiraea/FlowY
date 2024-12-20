@@ -73,6 +73,10 @@ io.on('connection', (socket) => {
         io.to(`project_${projectId}`).emit(`${displayName} has joined this project`);
         console.log(`${displayName} joined this project ${projectId}`);
     });
+    socket.on(`draw`, ({ projectId, drawData }) => {
+        const roomName = `project_${projectId}`;
+        socket.to(roomName).emit('draw', drawData); // Broadcast to others in the room 
+    });
     socket.on(`leaveProject`, ({ projectId, displayName }) => {
         console.log(`${displayName} left project:${projectId}`);
         socket.leave(`project_${projectId}`); // to actually remove the socket from the room

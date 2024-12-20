@@ -16,7 +16,6 @@ import { RiAddBoxFill } from "react-icons/ri";
 import { IoIosCheckmark } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
 import { IoIosAddCircle } from "react-icons/io"; 
-import { ProjectMembersContext } from '../../context/ProjectMembersContext';
 import { HiOutlineSquare3Stack3D } from "react-icons/hi2";
 type TaskProps= {
     task: TaskType
@@ -69,7 +68,7 @@ function Task({task, taskMembers, taskStyle}: TaskProps  ) {
 
 
   const params = useParams();
-  const projectId = params.projectId;
+  const projectId = params.projectId || "";
 
   const {isError: isErrorProjectMembers, isLoading:  isLoadingProjectMembers, error:  errorProjectMembers, data:  projectMembers} = useGetAllProjectMembersByProjectId(projectId);
   const {attributes, listeners, setNodeRef, transform} = useDraggable({

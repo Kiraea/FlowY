@@ -87,14 +87,14 @@ function PeopleContainer() {
       <div>
         {myRole !== 'member' && <button className='bg-primary-bg1 rounded-lg p-2 mb-5 hover:bg-primary-bg2 shadow-black shadow-sm'  onClick={()=>dialogRefAddMember.current?.showModal()} ><span className='text-xl font-bold'>Add Member</span></button>}
       </div>
-      <div className='bg-primary-bg1 rounded-xl p-5 flex flex-col gap-5 shadow-black shadow-md '>
+      <div className='bg-primary-bg1 rounded-xl p-2 flex flex-col gap-5 shadow-black shadow-md '>
         <div className='px-20 grid grid-cols-3 text-xl rounded-xl font-bold  '>
           <span>Name</span>
           <span>Role</span>
           <span>ChangeRole</span>
         </div>
       </div>
-      <div className='bg-primary-bg2 rounded-xl p-5 flex flex-col gap-5 shadow-black shadow-md '>
+      <div className='bg-primary-bg2 rounded-xl p-2 flex flex-col gap-5 shadow-black shadow-md '>
         {sortedProjectMembers.map((member)=> {
            return  (<PeopleCard key={member.member_id} handleUpdateMemberRole={handleUpdateMemberRole} displayName={member.display_name} memberRole={member.role} memberId={member.member_id} />)
         })}
