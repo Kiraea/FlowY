@@ -93,6 +93,9 @@ const io = new Server(server, {
 })
 
 io.on('connection', (socket)=> {
+  socket.on("connect_error", (err) => {
+    console.log(`connect_error due to ${err.message}`);
+  });
   socket.on('joinProject', ({projectId, displayName})=> {
 
     socket.join(`project_${projectId}`)
@@ -105,15 +108,13 @@ io.on('connection', (socket)=> {
   socket.on('error', (err) => {
     console.error('Socket error:', err);
   });
-  socket.on(`draw`, ({projectId, drawingData}) => {
+  socket.on(`draw`, ({projectId, drawingStroke}) => {
     try{
-      const roomName = `project_${projectId}`;
-      console.log("IS DRAWING");
       console.log(i)
       i++;
       //console.log(drawingData.width , drawingData.height, drawingArray, "drawing data");
 
-      io.to(`project_${projectId}`).emit('receiveIncomingDrawings', {...drawingData})
+      io.to(`project_${projectId}`).emit('receiveIncomingDrawings', drawingStroke)
     }catch(err){
       console.log(err);
     }

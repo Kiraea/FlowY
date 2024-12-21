@@ -8,6 +8,7 @@ import { IoIosUndo } from "react-icons/io";
 import { FaCheck } from "react-icons/fa";
 import { useUserData } from '../../hooks/QueryHooks';
 import { io } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 
 
 enum OptionType {
@@ -15,18 +16,29 @@ enum OptionType {
   DRAW = "draw",
   TEXT = "text"
 }
-
+type Stroke = {
+  x: number;
+  y: number;
+  lineWidth: number;
+  strokeStyle: string; // Assuming color is a string
+  fillStyle: string;
+  globalCompositeOperation: GlobalCompositeOperation;
+};
 function WhiteBoard() {
 
-  const socket = io(`http://localhost:3001`)
 
 
   const {data: myUserData, isLoading: myUserIsLoading, isError: myUserIsError, error: myUserError} = useUserData()
   const [isDrawing, setIsDrawing] = useState(false)
-  const [drawingHistory, setDrawingHistory] = useState<ImageData[]>([])
+  const [drawingHistory, setDrawingHistory] = useState<Stroke[][]>([])
+
+  const socketRef = useRef<Socket | null>(null)
+  const strokeListRef =useRef<Stroke[]>([]);
+
   const [optionType, setOptionType] = useState(OptionType.DRAW)
   const modeRef = useRef<OptionType>(OptionType.DRAW);  // Store the mode
   const [color, setColor ] = useState('#111111')
+  const [lineWidth, setLineWidth] = useState(10)
   const [textLocation, setTextLocation] = useState({x: 0, y:0})
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -35,53 +47,87 @@ function WhiteBoard() {
   const [userInput, setUserInput] = useState("")
   const params = useParams();
   const projectId = params.projectId || '';
-  console.log(optionType, " OPTION TYPE");
   useEffect(() => {
+    console.log("USEEFFECT1");
     const handleResize = () => {
       let canvas: HTMLCanvasElement | null = canvasRef.current;
       if (canvas) {
-        canvas.width = canvas.offsetWidth;  // Dynamically set width based on container
-        canvas.height = canvas.offsetHeight; // Dynamically set height based on container
-  
-        // Redraw the content after resizing
+        canvas.width = canvas.offsetWidth;  
+        canvas.height = canvas.offsetHeight; // 
+     
         const context = canvas.getContext("2d", { willReadFrequently: true });
         if (context) {
           context.lineCap = "round";
-          context.lineWidth = 15;
+          context.lineWidth = lineWidth;
           context.strokeStyle = color;
-          context.fillStyle = "#ff0000";
+          context.fillStyle = color;
           contextRef.current = context;
   
-          // Reapply the drawing history
-          drawingHistory?.forEach((imageData) => {
-            contextRef.current?.putImageData(imageData, 0, 0);
-          });
+    
+
+          console.log(drawingHistory.length)
+          drawingHistory?.forEach((batch, batchIndex) => {
+            if (Array.isArray(batch) && contextRef.current) {
+              batch.forEach((fullStroke) => {
+                contextRef.current?.beginPath();
+                contextRef.current!.lineWidth = fullStroke.lineWidth || 0;
+                contextRef.current!.strokeStyle = fullStroke.strokeStyle;
+                contextRef.current!.lineTo(fullStroke.x, fullStroke.y);
+                contextRef.current!.stroke();
+                contextRef.current!.globalCompositeOperation =
+                  fullStroke.globalCompositeOperation || "source-over";
+                contextRef.current!.closePath();
+              });
+            } else {
+              console.error(`Batch at index ${batchIndex} is not an array:`, batch);
+            }
+          }); //
+
         }
+        strokeListRef.current = [];
       }
     };
-  
-    // Initial resize
-    handleResize();
-  
-    // Add the event listener for window resize
-    window.addEventListener("resize", handleResize);
-  
-    // Clean up the event listener on component unmount
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    handleResize()
   }, [drawingHistory, color, optionType]);
 
-  useEffect(()=> {
-      if(OptionType.TEXT === optionType){
-        drawingHistory?.forEach((imageData) => {
-            contextRef.current?.putImageData(imageData,0,0)
-        })
-        contextRef.current?.fillText(userInput, textLocation.x, textLocation.y)
-      }
-  }, [userInput, textLocation.x, textLocation.y]) 
 
   useEffect(()=> {
+
+    socketRef.current = io(`http://localhost:3001`)
+    socketRef.current.connect()
+    console.log("useEffect2")
+    if (myUserData){
+      socketRef.current.emit("joinProject", ({projectId: projectId, displayName: myUserData.displayName}))
+    }
+
+    const receiveDrawingListener = (drawingStroke) => {
+      if (contextRef.current) {
+      setDrawingHistory((prev) => {
+        if(prev.length > 0){
+          return [...prev, drawingStroke]
+        }else{
+          return [drawingStroke]
+        }
+        })
+      }
+    }
+
+    socketRef.current!.on("receiveIncomingDrawings", receiveDrawingListener);
+
+    return () => {
+      if(myUserData){
+        console.log("RETURN USEFFECT2")
+        socketRef.current?.off("receiveIncomingDrawings", receiveDrawingListener)
+        socketRef.current!.emit('leaveProject', ({projectId: projectId, displayName: myUserData.displayName}))
+
+        socketRef.current!.disconnect()
+        // do not do this this basically means socket would disconnect from the whole server, but we just want
+        // the user to leave the room not disconnect and not connect to other rooms imagine disconnect as disconnecting from all rooms not just 
+        // 1 specific room
+      }
+    }
+  }, [projectId, myUserData])
+   useEffect(()=> {
     if(contextRef.current){
       if (optionType === OptionType.DRAW || optionType === OptionType.TEXT){
           contextRef.current.globalCompositeOperation = 'source-over'
@@ -90,102 +136,128 @@ function WhiteBoard() {
       }
     }
   }, [optionType])
- 
-  useEffect(()=> {
-    if (myUserData){
-      socket.emit("joinProject", ({projectId: projectId, displayName: myUserData.displayName}))
-    }
-    /*
-    socket.on("getDrawingHistory", (drawingHistory)=> { // SHOULD THIS BE ARRAY?
-      setDrawingHistory(drawingHistory)
-    })
-    */
-    const receiveDrawingListener = (drawingData) => {
-      if (contextRef.current) {
-        const { data, width, height } = drawingData;
-    
-        // Ensure the data is a typed array (Uint8ClampedArray)
-        const clampedData = new Uint8ClampedArray(data);
-    
-        // Ensure the data length is width * height * 4
-        if (clampedData.length === width * height * 4) {
-          const imageData = new ImageData(clampedData, width, height);
-          setDrawingHistory((prev) => [...prev, imageData]);
-        } else {
-          console.error("Error in drawing data length:", {
-            expectedLength: width * height * 4,
-            actualLength: clampedData.length,
-            width,
-            height,
-            data: clampedData
-          });
-        }
-      }
-    } 
-    socket.on("receiveIncomingDrawings", receiveDrawingListener);
-
-    return () => {
-      if(myUserData){
-        socket.off("receiveIncomingDrawings", receiveDrawingListener)
-        socket.emit('leaveProject', ({projectId: projectId, displayName: myUserData.displayName}))
-        // do not do this this basically means socket would disconnect from the whole server, but we just want
-        // the user to leave the room not disconnect and not connect to other rooms imagine disconnect as disconnecting from all rooms not just 
-        // 1 specific room
-      }
-    }
-  }, [projectId, myUserData])
-
-
-
+  const drawingInterval = useRef<ReturnType<typeof setInterval>>(); // Store drawingInterval in useRef
+  
   const mouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if(OptionType.ERASE === optionType|| OptionType.DRAW === optionType){
-      const {offsetX, offsetY} = e.nativeEvent as MouseEvent
+    if (OptionType.ERASE === optionType || OptionType.DRAW === optionType && contextRef.current) {
+      const { offsetX, offsetY } = e.nativeEvent as MouseEvent;
       contextRef.current?.beginPath();
       contextRef.current?.moveTo(offsetX, offsetY);
       contextRef.current?.lineTo(offsetX, offsetY);
       contextRef.current?.stroke();
-      setIsDrawing(true)
-      e.nativeEvent.preventDefault()
+      setIsDrawing(true);
+  
+      const newStroke = {
+        x: offsetX,
+        y: offsetY,
+        lineWidth: lineWidth,
+        strokeStyle: color, // the outline color
+        fillStyle: color, // the fill color (if applicable)
+        globalCompositeOperation: contextRef.current?.globalCompositeOperation,
+      };
+  
+      strokeListRef.current.push(newStroke);
+     
+      e.nativeEvent.preventDefault();
     }
-
-  }
-
+  };
+  
+  
   const mouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => { 
     if(OptionType.ERASE === optionType || OptionType.DRAW === optionType){
       const {offsetX, offsetY} = e.nativeEvent
       if (!isDrawing) return
-      contextRef.current?.lineTo(offsetX, offsetY)
-      contextRef.current?.stroke()
+        contextRef.current?.lineTo(offsetX, offsetY)
+        contextRef.current?.stroke()
+      const newStroke = {
+        x: offsetX,
+        y: offsetY,
+        lineWidth: lineWidth,
+        strokeStyle: color ,
+        fillStyle: color, 
+        globalCompositeOperation: contextRef.current?.globalCompositeOperation,
+      };
+
+     strokeListRef.current.push(newStroke) 
 
       e.nativeEvent.preventDefault()
     }
 
   }
+  const fillGaps = (strokeList: Array<{ x: number, y: number, lineWidth: number, strokeStyle: string, fillStyle: string, globalCompositeOperation: string }>) => {
+    const newStrokeList = [];
+    for (let i = 0; i < strokeList.length - 1; i++) {
+      const currentStroke = strokeList[i];
+      const nextStroke = strokeList[i + 1];
+  
+      newStrokeList.push(currentStroke);
+  
 
-
+      const diffX = Math.abs(nextStroke.x - currentStroke.x);
+      const diffY = Math.abs(nextStroke.y - currentStroke.y);
+  
+      if (diffX > 1 || diffY > 1) {
+        const steps = Math.max(diffX, diffY); 
+        for (let j = 1; j <= steps; j++) {
+          const interpX = currentStroke.x + (nextStroke.x - currentStroke.x) * (j / steps);
+          const interpY = currentStroke.y + (nextStroke.y - currentStroke.y) * (j / steps);
+  
+        
+          const newStroke = {
+            x: interpX,
+            y: interpY,
+            lineWidth: currentStroke.lineWidth,
+            strokeStyle: currentStroke.strokeStyle,
+            fillStyle: currentStroke.fillStyle,
+            globalCompositeOperation: currentStroke.globalCompositeOperation,
+          };
+  
+      
+          newStrokeList.push(newStroke);
+        }
+      }
+    }
+  
+   
+    newStrokeList.push(strokeList[strokeList.length - 1]);
+  
+    return newStrokeList;
+  };
   const mouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if ((OptionType.DRAW === optionType || OptionType.ERASE === optionType) && canvasRef.current){
+    if ((OptionType.DRAW === optionType || OptionType.ERASE === optionType) && canvasRef.current && socketRef.current){
       setIsDrawing(false)
       contextRef.current?.closePath()
       e.nativeEvent.preventDefault()
-      const imageData = contextRef.current?.getImageData(0,0, canvasRef.current.width , canvasRef.current.height)
-      if(imageData){
-
-        console.log(imageData)
-        if (socket.connected) {
-          socket.emit('draw', { projectId: projectId, drawingData: { data: imageData.data, height: imageData.height, width: imageData.width } }, (response) => {
+      const filledStrokeList = fillGaps(strokeListRef.current);
+      setDrawingHistory((prev)=> [...prev, filledStrokeList])
+        if (socketRef.current.connected) {
+          socketRef.current.emit('draw', { projectId: projectId, drawingStroke: filledStrokeList }, (response) => {
           });
         } else {
           console.error('Socket is not connected');
         }
-        setDrawingHistory((prev)=> [...prev, imageData])
       }
     }
-  }
+
+
+
+    /*
+  useEffect(()=> {
+      if(OptionType.TEXT === optionType){
+        drawingHistory?.forEach((imageData) => {
+            contextRef.current?.putImageData(imageData,0,0)
+        })
+        contextRef.current?.fillText(userInput, textLocation.x, textLocation.y)
+      }
+  }, [userInput, textLocation.x, textLocation.y]) 
+  */
+  /*
+
+  */
   const undo =  () => {
     setDrawingHistory((prev) => prev.slice(0, prev.length - 1));
   }
-
+  
   const mouseLeave = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if(OptionType.ERASE === optionType || OptionType.DRAW === optionType){
       setIsDrawing(false)
@@ -197,17 +269,18 @@ function WhiteBoard() {
 
   const setToErase = () => {
     if(contextRef.current){
-      contextRef.current.globalCompositeOperation = 'destination-out'
       resetTextOptions()
+      setIsDrawing(false)
       setOptionType(OptionType.ERASE)
+
     }
   }
   const setToDraw = () => {
     if(contextRef.current){
       setIsDrawing(false)
       setOptionType(OptionType.DRAW)
-      contextRef.current.globalCompositeOperation = 'source-over'
       resetTextOptions()
+
     }
   }
   const setToText = () => {
@@ -230,18 +303,20 @@ function WhiteBoard() {
     e.nativeEvent.preventDefault()
   }
 
+
+  
   const addText= (e: React.MouseEvent<HTMLButtonElement>) => {
     e.nativeEvent.preventDefault()
     if (OptionType.TEXT === optionType && canvasRef.current){
       const imageData = contextRef.current?.getImageData(0,0, canvasRef.current.width , canvasRef.current.height)
       if(imageData){
-        socket.emit('draw', {projectId: projectId, drawingData:{data: imageData.data, height: imageData.height, width: imageData.width}})
+        socketRef.current.emit('draw', {projectId: projectId, drawingData:{data: imageData.data, height: imageData.height, width: imageData.width}})
         console.log('Emitting draw data:', projectId, "dksaodkasodkoaskdoaskdoaskdoasLOLOLOLOLO");
         setDrawingHistory((prev)=> [...prev, imageData])
       }
     }
   }
-
+  
   return (
       <div className='w-full h-full bg-transparent flex flex-col p-5 ' >
         <div className='w-full flex-1'>
