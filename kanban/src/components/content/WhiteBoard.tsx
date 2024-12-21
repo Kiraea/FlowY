@@ -79,12 +79,11 @@ function WhiteBoard() {
           contextRef.current = context;
   
     
-          for (let history of drawingHistory){
-            console.log(history[history.length -1 ].userId, "USERID") 
-          }
           drawingHistory?.forEach((batch, batchIndex) => {
             if (Array.isArray(batch) && contextRef.current) {
               batch.forEach((fullStroke) => {
+
+
                 if(fullStroke.type === "stroke"){
                   contextRef.current?.beginPath();
                   contextRef.current!.lineWidth = fullStroke.lineWidth || 0;
@@ -94,6 +93,11 @@ function WhiteBoard() {
                   contextRef.current!.globalCompositeOperation =
                     fullStroke.globalCompositeOperation || "source-over";
                   contextRef.current!.closePath();
+                }
+
+                if (fullStroke.type === 'text'){
+                    contextRef.current!.font = fullStroke.font
+                    contextRef.current!.fillText(fullStroke.text,fullStroke.x, fullStroke.y)
                 }
 
               });
@@ -372,29 +376,40 @@ function WhiteBoard() {
   }
 
   const setToTextClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const {offsetX, offsetY} = e.nativeEvent
-    console.log(offsetX, offsetY, "OFFSETRS")
-    setTextLocation({x: offsetX, y:offsetY})
-    e.nativeEvent.preventDefault()
+    if (optionType === OptionType.TEXT){
+      const {offsetX, offsetY} = e.nativeEvent
+      console.log(offsetX, offsetY, "OFFSETRS")
+      setTextLocation({x: offsetX, y:offsetY})
+      e.nativeEvent.preventDefault()
+    }
   }
 
 
   
   const addText= (e: React.MouseEvent<HTMLButtonElement>) => {
+
     e.nativeEvent.preventDefault()
     if (OptionType.TEXT === optionType && canvasRef.current){
+        const newTextDrawing: Drawing = {
+          type: 'text', // Type is 'text'
+          x: textLocation.x,
+          y: textLocation.y,
+          text: userInput, // The user input text
+          font: '16px Arial', // Specify the font style here
+          fillStyle: 'black', // Specify the text color
+          userId: myUserData.displayName // The userId of the person creating the text
+        } as Text; 
+
+
       setDrawingHistory((prev)=> {
-        contextRef.current?.fillText(userInput, textLocation.x, textLocation.y)
-        return [...prev, ]
+
+        return [...prev, [newTextDrawing] as Text[]]
       })
-      const imageData = contextRef.current?.getImageData(0,0, canvasRef.current.width , canvasRef.current.height)
-      if(imageData){
-        socketRef.current!.emit('draw', {projectId: projectId,})
+
+        socketRef.current!.emit('draw', {projectId: projectId, drawingStroke: [newTextDrawing]})
         console.log('Emitting draw data:', projectId, "dksaodkasodkoaskdoaskdoaskdoasLOLOLOLOLO");
-          //set
       }
     }
-  }
   
   return (
       <div className='w-full h-full bg-transparent flex flex-col p-5 ' >

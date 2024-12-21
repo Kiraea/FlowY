@@ -118,7 +118,7 @@ io.on('connection', (socket)=> {
       console.log(i)
       i++;
       //console.log(drawingData.width , drawingData.height, drawingArray, "drawing data");
-
+      console.log(drawingStroke.type);
       socket.to(`project_${projectId}`).emit('receiveIncomingDrawings', drawingStroke)
     }catch(err){
       console.log(err);
