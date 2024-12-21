@@ -18,11 +18,13 @@ enum OptionType {
 }
 type Stroke = {
   x: number;
+  userId: string
   y: number;
   lineWidth: number;
   strokeStyle: string; // Assuming color is a string
   fillStyle: string;
   globalCompositeOperation: GlobalCompositeOperation;
+
 };
 function WhiteBoard() {
 
@@ -64,8 +66,9 @@ function WhiteBoard() {
           contextRef.current = context;
   
     
-
-          console.log(drawingHistory.length)
+          for (let history of drawingHistory){
+            console.log(history[history.length -1 ].userId, "USERID") 
+          }
           drawingHistory?.forEach((batch, batchIndex) => {
             if (Array.isArray(batch) && contextRef.current) {
               batch.forEach((fullStroke) => {
@@ -92,7 +95,7 @@ function WhiteBoard() {
 
 
   useEffect(()=> {
-
+    let i = 0;
     socketRef.current = io(`http://localhost:3001`)
     socketRef.current.connect()
     console.log("useEffect2")
@@ -101,6 +104,7 @@ function WhiteBoard() {
     }
 
     const receiveDrawingListener = (drawingStroke) => {
+      console.log("RECEIVING DRAWING");
       if (contextRef.current) {
       setDrawingHistory((prev) => {
         if(prev.length > 0){
@@ -111,7 +115,33 @@ function WhiteBoard() {
         })
       }
     }
-
+    const receiveUndoListener = (userId) => {
+      if (contextRef.current){
+        console.log(":RECIEVE UNDO RECEIVER: ", userId)
+        let lastUserDrawing = -1;
+        setDrawingHistory((prevDrawingHistory) => {
+          const updatedHistory = [...prevDrawingHistory]; 
+          for (let x = updatedHistory.length -1 ; x >= 0; x--) {
+            console.log(updatedHistory[x][0].userId, "COMPARE", userId);
+            if (updatedHistory[x][0].userId === userId) {
+              lastUserDrawing = x;
+              break;
+            }
+          }
+  
+        console.log(lastUserDrawing, "LAST USER DRAWING");
+  
+        if (lastUserDrawing !== -1) {
+          // Remove the user's last drawing (batch) from the array
+          updatedHistory.splice(lastUserDrawing, 1);
+        }
+  
+        // Return the updated history (this will set the state to the updated value)
+        return updatedHistory;
+      });
+      }
+    }
+    socketRef.current!.on('receiveUndoDrawings', receiveUndoListener)
     socketRef.current!.on("receiveIncomingDrawings", receiveDrawingListener);
 
     return () => {
@@ -154,6 +184,7 @@ function WhiteBoard() {
         strokeStyle: color, // the outline color
         fillStyle: color, // the fill color (if applicable)
         globalCompositeOperation: contextRef.current?.globalCompositeOperation,
+        userId: myUserData.displayName
       };
   
       strokeListRef.current.push(newStroke);
@@ -176,6 +207,7 @@ function WhiteBoard() {
         strokeStyle: color ,
         fillStyle: color, 
         globalCompositeOperation: contextRef.current?.globalCompositeOperation,
+        userId: myUserData.displayName
       };
 
      strokeListRef.current.push(newStroke) 
@@ -184,7 +216,7 @@ function WhiteBoard() {
     }
 
   }
-  const fillGaps = (strokeList: Array<{ x: number, y: number, lineWidth: number, strokeStyle: string, fillStyle: string, globalCompositeOperation: string }>) => {
+  const fillGaps = (strokeList: Array<{ x: number, userId: string, y: number, lineWidth: number, strokeStyle: string, fillStyle: string, globalCompositeOperation: GlobalCompositeOperation}>) => {
     const newStrokeList = [];
     for (let i = 0; i < strokeList.length - 1; i++) {
       const currentStroke = strokeList[i];
@@ -209,7 +241,8 @@ function WhiteBoard() {
             lineWidth: currentStroke.lineWidth,
             strokeStyle: currentStroke.strokeStyle,
             fillStyle: currentStroke.fillStyle,
-            globalCompositeOperation: currentStroke.globalCompositeOperation,
+            globalCompositeOperation: currentStroke.globalCompositeOperation as GlobalCompositeOperation, // Cast it explicitly
+            userId: currentStroke.userId
           };
   
       
@@ -223,6 +256,8 @@ function WhiteBoard() {
   
     return newStrokeList;
   };
+
+
   const mouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if ((OptionType.DRAW === optionType || OptionType.ERASE === optionType) && canvasRef.current && socketRef.current){
       setIsDrawing(false)
@@ -255,7 +290,28 @@ function WhiteBoard() {
 
   */
   const undo =  () => {
-    setDrawingHistory((prev) => prev.slice(0, prev.length - 1));
+    if (contextRef.current){
+
+
+      let lastUserDrawing = -1
+      for (let x = drawingHistory.length - 1; x >= 0 ; x--){
+          console.log(drawingHistory[x][0].userId, myUserData.displayName, "UNDO UNDO UNDO")
+        if (drawingHistory[x][0].userId === myUserData.displayName){
+          lastUserDrawing = x
+          break 
+        }
+      }
+      
+      if (lastUserDrawing !== -1){
+        socketRef.current!.emit('undo', {userId: myUserData.displayName, projectId: projectId})
+        setDrawingHistory((prev)=> {
+          const updatedHistory = [...prev]
+          updatedHistory.splice(lastUserDrawing,1)
+          return updatedHistory 
+
+        })
+      }
+    }
   }
   
   const mouseLeave = (e: React.MouseEvent<HTMLCanvasElement>) => {

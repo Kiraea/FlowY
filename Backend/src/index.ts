@@ -108,19 +108,35 @@ io.on('connection', (socket)=> {
   socket.on('error', (err) => {
     console.error('Socket error:', err);
   });
+
+  socket.on('undo', ({userId,projectId}) => {
+    console.log(userId, projectId, " this user sent undo")
+    socket.to(`project_${projectId}`).emit('receiveUndoDrawings', userId)
+  })
   socket.on(`draw`, ({projectId, drawingStroke}) => {
     try{
       console.log(i)
       i++;
       //console.log(drawingData.width , drawingData.height, drawingArray, "drawing data");
 
-      io.to(`project_${projectId}`).emit('receiveIncomingDrawings', drawingStroke)
+      socket.to(`project_${projectId}`).emit('receiveIncomingDrawings', drawingStroke)
     }catch(err){
       console.log(err);
     }
 
   })
+/*
+6
 
+This is by design in the socket.io API. This form you were using:
+
+socket.to(channelId).emit(...)
+is specifically designed to send to all sockets in the channelId room EXCEPT socket.
+
+If you want to send to ALL users in that room, then change the above code to:
+
+io.to(channelId).emit(...)
+*/
 
   socket.on(`leaveProject`, ({projectId, displayName})=> {
     console.log(`${displayName} left project:${projectId}`);
