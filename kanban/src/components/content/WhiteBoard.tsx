@@ -16,23 +16,36 @@ enum OptionType {
   DRAW = "draw",
   TEXT = "text"
 }
+type Drawing =  | Stroke | Text
+
+
 type Stroke = {
-  x: number;
+  type: 'stroke',
+  x: number,
   userId: string
   y: number;
   lineWidth: number;
   strokeStyle: string; // Assuming color is a string
   fillStyle: string;
   globalCompositeOperation: GlobalCompositeOperation;
+}
 
-};
+type Text = {
+   type: 'text';
+   x: number;
+   y: number; text: string;
+   font: string;
+   fillStyle: string;
+   userId: string;
+}
+  
 function WhiteBoard() {
 
 
 
   const {data: myUserData, isLoading: myUserIsLoading, isError: myUserIsError, error: myUserError} = useUserData()
   const [isDrawing, setIsDrawing] = useState(false)
-  const [drawingHistory, setDrawingHistory] = useState<Stroke[][]>([])
+  const [drawingHistory, setDrawingHistory] = useState<Drawing[][]>([])
 
   const socketRef = useRef<Socket | null>(null)
   const strokeListRef =useRef<Stroke[]>([]);
@@ -72,14 +85,17 @@ function WhiteBoard() {
           drawingHistory?.forEach((batch, batchIndex) => {
             if (Array.isArray(batch) && contextRef.current) {
               batch.forEach((fullStroke) => {
-                contextRef.current?.beginPath();
-                contextRef.current!.lineWidth = fullStroke.lineWidth || 0;
-                contextRef.current!.strokeStyle = fullStroke.strokeStyle;
-                contextRef.current!.lineTo(fullStroke.x, fullStroke.y);
-                contextRef.current!.stroke();
-                contextRef.current!.globalCompositeOperation =
-                  fullStroke.globalCompositeOperation || "source-over";
-                contextRef.current!.closePath();
+                if(fullStroke.type === "stroke"){
+                  contextRef.current?.beginPath();
+                  contextRef.current!.lineWidth = fullStroke.lineWidth || 0;
+                  contextRef.current!.strokeStyle = fullStroke.strokeStyle;
+                  contextRef.current!.lineTo(fullStroke.x, fullStroke.y);
+                  contextRef.current!.stroke();
+                  contextRef.current!.globalCompositeOperation =
+                    fullStroke.globalCompositeOperation || "source-over";
+                  contextRef.current!.closePath();
+                }
+
               });
             } else {
               console.error(`Batch at index ${batchIndex} is not an array:`, batch);
@@ -178,6 +194,7 @@ function WhiteBoard() {
       setIsDrawing(true);
   
       const newStroke = {
+        type: "stroke",
         x: offsetX,
         y: offsetY,
         lineWidth: lineWidth,
@@ -185,7 +202,7 @@ function WhiteBoard() {
         fillStyle: color, // the fill color (if applicable)
         globalCompositeOperation: contextRef.current?.globalCompositeOperation,
         userId: myUserData.displayName
-      };
+      } as Stroke;
   
       strokeListRef.current.push(newStroke);
      
@@ -201,6 +218,7 @@ function WhiteBoard() {
         contextRef.current?.lineTo(offsetX, offsetY)
         contextRef.current?.stroke()
       const newStroke = {
+        type: "stroke",
         x: offsetX,
         y: offsetY,
         lineWidth: lineWidth,
@@ -208,7 +226,7 @@ function WhiteBoard() {
         fillStyle: color, 
         globalCompositeOperation: contextRef.current?.globalCompositeOperation,
         userId: myUserData.displayName
-      };
+      } as Stroke;
 
      strokeListRef.current.push(newStroke) 
 
@@ -216,7 +234,7 @@ function WhiteBoard() {
     }
 
   }
-  const fillGaps = (strokeList: Array<{ x: number, userId: string, y: number, lineWidth: number, strokeStyle: string, fillStyle: string, globalCompositeOperation: GlobalCompositeOperation}>) => {
+  const fillGaps = (strokeList: Stroke[]) => {
     const newStrokeList = [];
     for (let i = 0; i < strokeList.length - 1; i++) {
       const currentStroke = strokeList[i];
@@ -236,6 +254,7 @@ function WhiteBoard() {
   
         
           const newStroke = {
+            type: "stroke",
             x: interpX,
             y: interpY,
             lineWidth: currentStroke.lineWidth,
@@ -254,7 +273,7 @@ function WhiteBoard() {
    
     newStrokeList.push(strokeList[strokeList.length - 1]);
   
-    return newStrokeList;
+    return newStrokeList as Stroke[];
   };
 
 
@@ -364,11 +383,15 @@ function WhiteBoard() {
   const addText= (e: React.MouseEvent<HTMLButtonElement>) => {
     e.nativeEvent.preventDefault()
     if (OptionType.TEXT === optionType && canvasRef.current){
+      setDrawingHistory((prev)=> {
+        contextRef.current?.fillText(userInput, textLocation.x, textLocation.y)
+        return [...prev, ]
+      })
       const imageData = contextRef.current?.getImageData(0,0, canvasRef.current.width , canvasRef.current.height)
       if(imageData){
-        socketRef.current.emit('draw', {projectId: projectId, drawingData:{data: imageData.data, height: imageData.height, width: imageData.width}})
+        socketRef.current!.emit('draw', {projectId: projectId,})
         console.log('Emitting draw data:', projectId, "dksaodkasodkoaskdoaskdoaskdoasLOLOLOLOLO");
-        setDrawingHistory((prev)=> [...prev, imageData])
+          //set
       }
     }
   }
