@@ -18,9 +18,10 @@ router.get('/getProjects', async (req,res)=> {
     }
 })
 
-router.get(`/getProjectsById`, async(req,res)=>{
+router.get(`/getProjectsById/:projectId`, async(req,res)=>{
+    const {projectId} = req.params
     try{
-        let result = await pool.query(queries.project.getProjectByIdQ);
+        let result = await pool.query(queries.project.getProjectByIdQ, [projectId]);
         if (result.rowCount > 0){
             res.status(200).json({data: result.rows, message: "foundProjects", status:"success"});
         }else{
@@ -180,6 +181,69 @@ router.post('/verifyProjectAccess', verifySessionToken, async (req,res)=> {
     }
 })
 
-router.post(`/`)
+
+
+
+router.patch('/patchProject/:projectId', verifySessionToken, async (req,res) => {
+    const {userId} = req
+    const {githubLink, name, specifications, description} = req.body
+    const {projectId} = req.params
+
+    console.log(githubLink, name, specifications, description)
+
+
+    let values : any = []
+    let conditions : any = []
+    let whereConditions : any = []
+
+    if (githubLink){
+        conditions.push(`github_link = $${values.length+1}`)
+        values.push(githubLink)
+    }
+    if(name){
+        conditions.push(`name = $${values.length+1}`)
+        values.push(name)
+    }
+    if(specifications){
+        conditions.push(`specifications = $${values.length+1}`)
+        values.push(specifications)
+    }
+    if(description){
+        conditions.push(`description = $${values.length+1}`)
+        values.push(description)
+    }
+
+    whereConditions.push(`id = $${values.length+1}`);
+    values.push(projectId)
+
+
+    
+    let newQuery: string = `
+        UPDATE projects 
+        SET ${conditions.join(', ')}
+        WHERE ${whereConditions.join(` AND `)}
+        RETURNING *;
+    `
+
+
+
+    try{
+        let result = await pool.query(newQuery, values)
+        if (result.rowCount! > 0){
+            res.status(200).json({status:"success", message: "succesfully updated projects"})
+        }else{
+            console.log("NIGP")
+            res.status(200).json({status:"success", message: "did not update projects "})
+        }
+    }catch(e){
+        res.status(500).json({status:"fail", message: "did not create update projects due to server errors"})
+        console.log(e)
+    }
+})
+
+
+
+
+
 
 export {router}

@@ -253,7 +253,6 @@ function ProjectPage() {
         <div className='shadow-black shadow-lg font-Monsterrat flex flex-col max-h-screen bg-primary-bg1 justify-between xl:flex-row sm:flex-wrap xl:w-full xl:min-h-0 xl:justify-around sm:text-xs sm:'>
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Main)}}><GrProjects/><span className='xlreverse:hidden font-bold'>Project</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto bg-primary-bg2 sm:w-1/3' onClick={()=>{setContent(Content.People)}}><IoPeopleSharp/><span className='xlreverse:hidden font-bold'>Members</span></button>
-          <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Settings)}}><IoSettingsSharp/><span className='xlreverse:hidden font-bold'>Settings</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto bg-primary-bg2 sm:w-1/3' onClick={()=>{setContent(Content.WhiteBoard)}}><FaExternalLinkSquareAlt/><span className='xlreverse:hidden font-bold'>Links</span></button>
           <button className='left-panel-tab w-full p-4 flex-auto sm:w-1/3' onClick={()=>{setContent(Content.Specifications)}}><IoDocumentTextSharp/><span className='xlreverse:hidden font-bold'>Specification</span></button>
         </div>
@@ -267,7 +266,6 @@ function ProjectPage() {
             <MemberRoleProvider myRole={myRole} setMyRole={setMyRole}>
           {content === Content.Main && <ColumnContainer dialogRef={dialogRef}/>}
           {content === Content.People && <People/>}
-          {content === Content.Settings && <Settings/>}
           {content === Content.Specifications && <Specifications/>}
           {content === Content.WhiteBoard && <WhiteBoard/>}
             </MemberRoleProvider> 

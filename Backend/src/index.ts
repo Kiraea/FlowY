@@ -40,7 +40,8 @@ var pool = new Pool({
   max: 20, // set pool max size to 20
   idleTimeoutMillis: 1000, // close idle clients after 1 second
   connectionTimeoutMillis: 1000, // return an error after 1 second if connection could not be established
-  maxUses: 7500, // close (and replace) a connection after it has been used 7500 times (see below for discussion)
+  maxUses: 7500, // close (and replace) a connection after it has been used 7500 times 
+  options: "-c search_path=kanban"
 })
 const corsOptions = {
     origin: "http://localhost:5173",
@@ -92,6 +93,12 @@ const io = new Server(server, {
   maxHttpBufferSize: 1e8
 })
 
+
+
+
+const rooms = {}
+
+
 io.on('connection', (socket)=> {
   socket.on("connect_error", (err) => {
     console.log(`connect_error due to ${err.message}`);
@@ -103,7 +110,25 @@ io.on('connection', (socket)=> {
     io.to(`project_${projectId}`).emit(`${displayName} has joined this project`)
     console.log(`${displayName} joined this project ${projectId}`);
 
+
+    const clients = io.sockets.adapter.rooms.get(`project_${projectId}`);
+    //to get the number of clients in this room
+    const numClients = clients ? clients.size : 0;
+    if (numClients >= 1){
+        // Convert the Set of clients to an Array
+      const clientsArray = Array.from(clients);
+      // Pick a random client (excluding the current socket)
+      const randomIndex = Math.floor(Math.random() * clientsArray.length);
+      const randomClient = clientsArray[randomIndex];
+      console.log(randomClient, "YOU WILL SEND THE DATA")
+      socket.to(randomClient).to(`project_${projectId}`).emit('informExistingUserOfNewPerson', { toUserId: socket.id });
+
+    }
+
+    socket.join(`project_${projectId}`)
   })
+
+  
   // Example: Handling errors globally
   socket.on('error', (err) => {
     console.error('Socket error:', err);
@@ -112,7 +137,17 @@ io.on('connection', (socket)=> {
   socket.on('undo', ({userId,projectId}) => {
     console.log(userId, projectId, " this user sent undo")
     socket.to(`project_${projectId}`).emit('receiveUndoDrawings', userId)
+
+    
   })
+
+  socket.on('syncDrawingHistory', ({toUserId, drawingHistory, projectId}) => {
+    console.log(drawingHistory);
+    socket.to(toUserId).to(`project_${projectId}`).emit('getInitialDrawings', { drawingHistory });
+
+  })
+
+
   socket.on(`draw`, ({projectId, drawingStroke}) => {
     try{
       console.log(i)
@@ -146,10 +181,11 @@ io.to(channelId).emit(...)
 
 
 const run = async () =>{
-    server.listen(process.env.PORT, ()=>{
+    const client = await pool.connect()
+    server.listen(process.env.PORT, async ()=>{
       console.log(`${process.env.PORT}`)
       try{
-        setupDatabase()
+        await setupDatabase()
       }catch(e){
         console.log(e)
       }
@@ -163,8 +199,9 @@ run();
 // So in PostgreSQL we have the concept of DB(we put this in pool config) and then inside those DBs are schema, we create a 'kanban' schema and we select it
 // by doign search_path to
 const setupDatabase = async () => {
-    await pool.query("SET search_path TO 'kanban';");
-/*
+  const kanban = 'kanban'
+  await pool.query(`SET search_path TO ${kanban};`);
+
   await pool.query(`DROP TABLE IF EXISTS task_comments;`);
   await pool.query(`DROP TABLE IF EXISTS task_members;`);
   await pool.query(`DROP TABLE IF EXISTS project_members;`);
@@ -175,7 +212,7 @@ const setupDatabase = async () => {
   await pool.query(`DROP TABLE IF EXISTS tasks;`);
   await pool.query(`DROP TABLE IF EXISTS projects;`);
 
-  // Drop types (now that tables are gone)
+  //Drop types (now that tables are gone)
   await pool.query(`DROP TYPE IF EXISTS status_enum CASCADE;`);
   await pool.query(`DROP TYPE IF EXISTS task_priority_type CASCADE;`);
   await pool.query(`DROP TYPE IF EXISTS task_status_type CASCADE;`); 
@@ -184,145 +221,145 @@ const setupDatabase = async () => {
   await pool.query(`CREATE TYPE task_priority_type AS ENUM('low', 'medium', 'high');`);
   await pool.query(`CREATE TYPE task_status_type AS ENUM('todo', 'in-progress', 'review', 'done');`);
   await pool.query(`CREATE TYPE role_type AS ENUM ('leader', 'member', 'admin');`);
-*/
-    await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
+
+  await pool.query(`
+  CREATE TABLE IF NOT EXISTS users (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255) UNIQUE NOT NULL,
+    is_disabled BOOLEAN DEFAULT FALSE
+  );`)
+  console.log("3")
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS "user_sessions" (
+    "sid" varchar NOT NULL PRIMARY KEY,
+    "sess" json NOT NULL,
+    "expire" timestamp(6) NOT NULL
+    )
+    WITH (OIDS=FALSE);
+    `)
+
+  console.log("4")
+  await pool.query(`CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "user_sessions" ("expire");`)
+    console.log("0")
+    /*
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS friends (
+      id SERIAL PRIMARY KEY,
+      user_id_1 INTEGER,
+      user_id_2 INTEGER, 
+      CONSTRAINT fk_user1 FOREIGN KEY (user_id_1)
+      REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_user2 FOREIGN KEY (user_id_2)
+      REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE (user_id_1, user_id_2)
+      );
+    `)
+    console.log("1")
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS friend_request (
+      id SERIAL PRIMARY KEY,
+      sender_user INTEGER,
+      receiver_user INTEGER,
+      status status_enum,
+      sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_sender FOREIGN KEY (sender_user)
+      REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_receiver FOREIGN KEY (receiver_user)
+      REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE (sender_user, receiver_user)
+      );
+    `)
+  */
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS projects (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      username VARCHAR(255) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL,
-      display_name VARCHAR(255) UNIQUE NOT NULL,
-      is_disabled BOOLEAN DEFAULT FALSE
-    );`)
+      name VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      github_link VARCHAR(255) NULL,
+      specifications VARCHAR(255) NOT NULL,
+      created_at DATE DEFAULT CURRENT_DATE
+    );
+  `)
     
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS "user_sessions" (
-      "sid" varchar NOT NULL PRIMARY KEY,
-      "sess" json NOT NULL,
-      "expire" timestamp(6) NOT NULL
-      )
-      WITH (OIDS=FALSE);
-      `)
 
-    await pool.query(`CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "user_sessions" ("expire");`)
-      console.log("0")
-      /*
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS friends (
-        id SERIAL PRIMARY KEY,
-        user_id_1 INTEGER,
-        user_id_2 INTEGER, 
-        CONSTRAINT fk_user1 FOREIGN KEY (user_id_1)
-        REFERENCES users(id) ON DELETE CASCADE,
-        CONSTRAINT fk_user2 FOREIGN KEY (user_id_2)
-        REFERENCES users(id) ON DELETE CASCADE,
-        UNIQUE (user_id_1, user_id_2)
-        );
-      `)
-      console.log("1")
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS friend_request (
-          id SERIAL PRIMARY KEY,
-          sender_user INTEGER,
-          receiver_user INTEGER,
-          status status_enum,
-          sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          CONSTRAINT fk_sender FOREIGN KEY (sender_user)
-          REFERENCES users(id) ON DELETE CASCADE,
-          CONSTRAINT fk_receiver FOREIGN KEY (receiver_user)
-          REFERENCES users(id) ON DELETE CASCADE,
-          UNIQUE (sender_user, receiver_user)
-          );
-        `)
-      */
-      console.log("2")
- 
-        await pool.query(`
-          CREATE TABLE IF NOT EXISTS projects (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            name VARCHAR(255) NOT NULL,
-            description TEXT NOT NULL,
-            github_link VARCHAR(255) NULL,
-            specifications VARCHAR(255) NOT NULL,
-            created_at DATE DEFAULT CURRENT_DATE
-          );
-        `)
-      
-
-        await pool.query(`
-          CREATE TABLE IF NOT EXISTS project_members (
-            project_id uuid NOT NULL,
-            member_id uuid NOT NULL,
-            role role_type,
-            CONSTRAINT fk_project_id_project_members FOREIGN KEY (project_id)
-            REFERENCES projects(id) ON DELETE CASCADE,
-            CONSTRAINT fk_member_id_project_members FOREIGN KEY (member_id)
-            REFERENCES users(id) ON DELETE CASCADE,
-            PRIMARY KEY (project_id, member_id)
-          );     
-        `)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS project_members (
+      project_id uuid NOT NULL,
+      member_id uuid NOT NULL,
+      role role_type,
+      CONSTRAINT fk_project_id_project_members FOREIGN KEY (project_id)
+      REFERENCES projects(id) ON DELETE CASCADE,
+      CONSTRAINT fk_member_id_project_members FOREIGN KEY (member_id)
+      REFERENCES users(id) ON DELETE CASCADE,
+      PRIMARY KEY (project_id, member_id)
+    );     
+  `)
 
 
-        await pool.query(`
-          CREATE TABLE IF NOT EXISTS tasks (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            task_title VARCHAR(255) NOT NULL,
-            task_priority task_priority_type NOT NULL,
-            task_status task_status_type NOT NULL,
-            task_update status_enum NOT NULL,
-            created_at DATE DEFAULT CURRENT_DATE,
-            project_id uuid NOT NULL,
-            CONSTRAINT fk_project_id_tasks FOREIGN KEY (project_id)
-            REFERENCES projects(id) ON DELETE CASCADE
-          );
-        `)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      task_title VARCHAR(255) NOT NULL,
+      task_priority task_priority_type NOT NULL,
+      task_status task_status_type NOT NULL,
+      task_update status_enum NOT NULL,
+      created_at DATE DEFAULT CURRENT_DATE,
+      project_id uuid NOT NULL,
+      CONSTRAINT fk_project_id_tasks FOREIGN KEY (project_id)
+      REFERENCES projects(id) ON DELETE CASCADE
+    );
+  `)
 
-        await pool.query(
-          `CREATE TABLE IF NOT EXISTS task_comments (
-              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-              task_id uuid,
-              project_member_id uuid, 
-              project_id uuid,
-              comment VARCHAR(255) NOT NULL,
-              created_at DATE DEFAULT CURRENT_DATE,
-              edited BOOLEAN NOT NULL,
-              CONSTRAINT fk_project_member_task_comments FOREIGN KEY (project_member_id, project_id)
-              REFERENCES project_members(member_id, project_id) ON DELETE CASCADE,
-              CONSTRAINT fk_task_id_task_comments FOREIGN KEY (task_id)
-              REFERENCES tasks(id) ON DELETE CASCADE
-          );`
-        )
-          
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS task_comments (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        task_id uuid,
+        project_member_id uuid, 
+        project_id uuid,
+        comment VARCHAR(255) NOT NULL,
+        created_at DATE DEFAULT CURRENT_DATE,
+        edited BOOLEAN NOT NULL,
+        CONSTRAINT fk_project_member_task_comments FOREIGN KEY (project_member_id, project_id)
+        REFERENCES project_members(member_id, project_id) ON DELETE CASCADE,
+        CONSTRAINT fk_task_id_task_comments FOREIGN KEY (task_id)
+        REFERENCES tasks(id) ON DELETE CASCADE
+    );`
+  )
+    
 
-        await pool.query(`
-          CREATE TABLE IF NOT EXISTS task_members (
-            task_user_id uuid NOT NULL,
-            project_id uuid,
-            task_id uuid NOT NULL,
-            CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_user_id, project_id)
-            REFERENCES project_members(member_id, project_id),
-            CONSTRAINT fk_task_id_task_members FOREIGN KEY(task_id)
-            REFERENCES tasks(id),
-            PRIMARY KEY (task_id, task_user_id)
-          ); 
-        `)
-        console.log("6");
-        /*
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS friend_request (
-          id SERIAL PRIMARY KEY,
-          INTEGER,
-          receiver_user INTEGER,
-          status status_enum,
-          sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          CONSTRAINT fk_sender FOREIGN KEY (sender_user)
-          REFERENCES users(id) ON DELETE CASCADE,
-          CONSTRAINT fk_receiver FOREIGN KEY (receiver_user)
-          REFERENCES users(id) ON DELETE CASCADE,
-          UNIQUE (sender_user, receiver_user)
-          );
-        `)
-      */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS task_members (
+      task_user_id uuid NOT NULL,
+      project_id uuid,
+      task_id uuid NOT NULL,
+      CONSTRAINT fk_member_id_task_members FOREIGN KEY(task_user_id, project_id)
+      REFERENCES project_members(member_id, project_id),
+      CONSTRAINT fk_task_id_task_members FOREIGN KEY(task_id)
+      REFERENCES tasks(id),
+      PRIMARY KEY (task_id, task_user_id)
+    ); 
+  `)
+    console.log("6");
+    /*
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS friend_request (
+      id SERIAL PRIMARY KEY,
+      INTEGER,
+      receiver_user INTEGER,
+      status status_enum,
+      sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_sender FOREIGN KEY (sender_user)
+      REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_receiver FOREIGN KEY (receiver_user)
+      REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE (sender_user, receiver_user)
+      );
+    `)
+  */
 }
 export {pool}

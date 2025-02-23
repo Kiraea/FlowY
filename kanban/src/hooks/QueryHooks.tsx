@@ -1,4 +1,4 @@
-import {useQuery } from '@tanstack/react-query'
+import {useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { axiosInstance } from '../axios/axios'
 import axios, { Axios, AxiosError } from 'axios';
 import { UseQueryResult } from '@tanstack/react-query';
@@ -220,3 +220,52 @@ export const useAddProjectMember = async ({projectId, displayName} : {projectId:
         }
     }
 }
+
+
+export const getProjectById = async ({projectId} : {projectId: string}) => {
+    try{
+        let result = await axiosInstance.get(`${import.meta.env.VITE_BASE_URL_LINK}/getProjectsById/${projectId}`)
+        if (result.status === 200) {
+            return result.data.data
+        }
+    }catch(e: unknown){
+        if (e instanceof AxiosError){
+            console.log(e);
+        }
+    }
+}
+
+export const useGetSpecificProject = (projectId: string ) => {
+    return useQuery({
+        queryKey: ['projects', projectId],
+        queryFn: () => getProjectById({projectId}),
+    })
+}
+
+
+const patchProjectDetails = async ({projectDetails, projectId}: {projectDetails: {[key: string]: any}, projectId: string}) => {
+    try{
+        let result = await axiosInstance.patch(`${import.meta.env.VITE_BASE_URL_LINK}/patchProject/${projectId}`, projectDetails) 
+        if(result.status == 200){
+            result.data.data
+        }
+    }catch(e: unknown){
+        if (e instanceof AxiosError){
+            console.log(e)
+            throw(e)
+        }
+    }
+}
+
+export const usePatchProjectDetails = () => {
+    const queryClient = useQueryClient()
+    const {mutateAsync: usePatchProjectDetailsAsync} = useMutation({
+        mutationFn: patchProjectDetails,
+        onSuccess: (data,variables) =>  {
+            queryClient.invalidateQueries({queryKey: ["projects", variables.projectId]});
+            queryClient.invalidateQueries({queryKey: ["projects"]});
+        },
+    })
+    return {usePatchProjectDetailsAsync}
+}
+

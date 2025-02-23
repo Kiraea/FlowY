@@ -46,7 +46,10 @@ function WhiteBoard() {
   const {data: myUserData, isLoading: myUserIsLoading, isError: myUserIsError, error: myUserError} = useUserData()
   const [isDrawing, setIsDrawing] = useState(false)
   const [drawingHistory, setDrawingHistory] = useState<Drawing[][]>([])
-
+  const drawingHistoryRef = useRef(drawingHistory);
+  useEffect(() => {
+    drawingHistoryRef.current = drawingHistory;
+  }, [drawingHistory]);
   const socketRef = useRef<Socket | null>(null)
   const strokeListRef =useRef<Stroke[]>([]);
 
@@ -114,6 +117,7 @@ function WhiteBoard() {
   }, [drawingHistory, color, optionType]);
 
 
+console.log(drawingHistory);
   useEffect(()=> {
     let i = 0;
     socketRef.current = io(`http://localhost:3001`)
@@ -161,6 +165,19 @@ function WhiteBoard() {
       });
       }
     }
+
+
+    socketRef.current!.on('informExistingUserOfNewPerson', ({ toUserId }) => {
+      console.log("you are the chosen one ")
+      console.log(drawingHistoryRef.current);
+      socketRef.current!.emit('syncDrawingHistory', { toUserId: toUserId, drawingHistory: drawingHistoryRef.current, projectId: projectId });
+    });
+
+    socketRef.current!.on('getInitialDrawings', ({drawingHistory})=> {
+      console.log("getting initialData", drawingHistory)
+      setDrawingHistory(drawingHistory);
+    })
+
     socketRef.current!.on('receiveUndoDrawings', receiveUndoListener)
     socketRef.current!.on("receiveIncomingDrawings", receiveDrawingListener);
 
@@ -186,6 +203,8 @@ function WhiteBoard() {
       }
     }
   }, [optionType])
+
+
   const drawingInterval = useRef<ReturnType<typeof setInterval>>(); // Store drawingInterval in useRef
   
   const mouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {

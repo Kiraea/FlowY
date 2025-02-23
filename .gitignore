@@ -1,2 +1,4 @@
 Backend/.env
 kanban/.env
+Backend/node_modules
+Backend/dist
